@@ -2,7 +2,7 @@ import argparse, sys, os
 _version = '0.1'
 
 def isArgDir(arg):
-    if not s.path.isdir(arg):
+    if not os.path.isdir(arg):
         raise argparse.ArgumentTypeError("'%s' is not a directory")
     return arg
 
