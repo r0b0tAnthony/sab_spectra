@@ -1,4 +1,4 @@
-import argparse, sys, os
+import argparse, sys, os, re
 _version = '0.1'
 
 def isArgDir(arg):
@@ -45,13 +45,17 @@ def getArgs():
 
 def main(argv):
     args = getArgs()
-
+    dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
     for fileName in os.listdir(args.input):
         filePath = os.path.join(args.input, fileName)
         with open(filePath, 'r') as dataFile:
             print "Reading In File: %s" % filePath
             for line in dataFile:
-                break
+                line = line.strip()
+                dataMatch = dataRe.match(line)
+                if dataMatch:
+                    print dataMatch.group('ramanShift')
+                    print dataMatch.group('intensity')
 
 if __name__ == '__main__':
     main(sys.argv)
