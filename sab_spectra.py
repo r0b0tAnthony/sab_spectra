@@ -46,16 +46,21 @@ def getArgs():
 def main(argv):
     args = getArgs()
     dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
+    if args.min >= args.max:
+        raise argparse.ArgumentError('--max', 'Your float value for --max must be greater than your --min value.')
     for fileName in os.listdir(args.input):
         filePath = os.path.join(args.input, fileName)
         with open(filePath, 'r') as dataFile:
             print "Reading In File: %s" % filePath
+            foundData = False
             for line in dataFile:
                 line = line.strip()
                 dataMatch = dataRe.match(line)
                 if dataMatch:
-                    print dataMatch.group('ramanShift')
-                    print dataMatch.group('intensity')
+                    ramanShift = float(dataMatch.group('ramanShift'))
+                    if ramanShift >= args.min and ramanShift <= args.max:
+                        foundData = True
+                        print line
 
 if __name__ == '__main__':
     main(sys.argv)
