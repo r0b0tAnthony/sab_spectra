@@ -44,7 +44,14 @@ def getArgs():
 
 
 def main(argv):
-    getArgs()
+    args = getArgs()
+
+    for fileName in os.listdir(args.input):
+        filePath = os.path.join(args.input, fileName)
+        with open(filePath, 'r') as dataFile:
+            print "Reading In File: %s" % filePath
+            for line in dataFile:
+                break
 
 if __name__ == '__main__':
     main(sys.argv)
