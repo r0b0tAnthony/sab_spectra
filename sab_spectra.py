@@ -76,7 +76,15 @@ def main(argv):
                 break
             else:
                 print 'Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
-
+    outputPath = os.path.abspath(args.output)
+    print 'Creating Output Directory: %s' % (outputPath,)
+    try:
+        os.makedirs(outputPath)
+    except OSError as e:
+        if e[0] == 17:
+            pass
+        else:
+            raise
     for dataFileName, inputData in data.iteritems():
         print dataFileName
         pprint(inputData['intensity']['original'])
