@@ -1,5 +1,7 @@
 import argparse, sys, os, re
 from pprint import pprint
+from airPLS import airPLS
+import numpy
 _version = '0.1'
 
 def isArgDir(arg):
@@ -55,18 +57,29 @@ def main(argv):
         with open(filePath, 'r') as dataFile:
             print "Reading In File: %s" % filePath
             filteredData = []
+            filteredDataIntensity = []
             for line in dataFile:
                 line = line.strip()
                 dataMatch = dataRe.match(line)
                 if dataMatch:
                     ramanShift = float(dataMatch.group('ramanShift'))
                     if ramanShift >= args.min and ramanShift <= args.max:
-                        filteredData.append((ramanShift, float(dataMatch.group('intensity'))))
+                        intensity = float(dataMatch.group('intensity'))
+                        filteredData.append([ramanShift, intensity])
+                        filteredDataIntensity.append(intensity)
             if len(filteredData) > 1:
-                data[fileName] = filteredData
+                pprint(filteredData)
+                data[fileName] = {'plot': numpy.array(filteredData), 'intensity': numpy.array(filteredDataIntensity)}
+                break
             else:
                 print 'Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
-    pprint(data)
+
+    for dataFileName, inputData in data.iteritems():
+        print dataFileName
+        pprint(inputData['intensity'])
+        airData = airPLS.airPLS(inputData['intensity'])
+        pprint(airData)
+        break
 
 if __name__ == '__main__':
     main(sys.argv)
