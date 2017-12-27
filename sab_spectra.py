@@ -1,4 +1,5 @@
 import argparse, sys, os, re
+from pprint import pprint
 _version = '0.1'
 
 def isArgDir(arg):
@@ -48,19 +49,24 @@ def main(argv):
     dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
     if args.min >= args.max:
         raise argparse.ArgumentError('--max', 'Your float value for --max must be greater than your --min value.')
+    data = {}
     for fileName in os.listdir(args.input):
         filePath = os.path.join(args.input, fileName)
         with open(filePath, 'r') as dataFile:
             print "Reading In File: %s" % filePath
-            foundData = False
+            filteredData = []
             for line in dataFile:
                 line = line.strip()
                 dataMatch = dataRe.match(line)
                 if dataMatch:
                     ramanShift = float(dataMatch.group('ramanShift'))
                     if ramanShift >= args.min and ramanShift <= args.max:
-                        foundData = True
-                        print line
+                        filteredData.append((ramanShift, float(dataMatch.group('intensity'))))
+            if len(filteredData) > 1:
+                data[fileName] = filteredData
+            else:
+                print 'Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
+    pprint(data)
 
 if __name__ == '__main__':
     main(sys.argv)
