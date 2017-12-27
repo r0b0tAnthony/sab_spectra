@@ -56,7 +56,7 @@ def main(argv):
         filePath = os.path.join(args.input, fileName)
         with open(filePath, 'r') as dataFile:
             print "Reading In File: %s" % filePath
-            filteredData = []
+            filteredDataRaman = []
             filteredDataIntensity = []
             for line in dataFile:
                 line = line.strip()
@@ -64,20 +64,23 @@ def main(argv):
                 if dataMatch:
                     ramanShift = float(dataMatch.group('ramanShift'))
                     if ramanShift >= args.min and ramanShift <= args.max:
-                        intensity = float(dataMatch.group('intensity'))
-                        filteredData.append([ramanShift, intensity])
-                        filteredDataIntensity.append(intensity)
-            if len(filteredData) > 1:
-                pprint(filteredData)
-                data[fileName] = {'plot': numpy.array(filteredData), 'intensity': numpy.array(filteredDataIntensity)}
+                        filteredDataRaman.append(ramanShift)
+                        filteredDataIntensity.append(float(dataMatch.group('intensity')))
+            if len(filteredDataRaman) > 1:
+                data[fileName] = {
+                    'raman': numpy.array(filteredDataRaman),
+                    'intensity': {
+                        'original': numpy.array(filteredDataIntensity)
+                    }
+                }
                 break
             else:
                 print 'Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
 
     for dataFileName, inputData in data.iteritems():
         print dataFileName
-        pprint(inputData['intensity'])
-        airData = airPLS.airPLS(inputData['intensity'])
+        pprint(inputData['intensity']['original'])
+        airData = airPLS.airPLS(inputData['intensity']['original'])
         pprint(airData)
         break
 
