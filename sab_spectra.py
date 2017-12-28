@@ -98,11 +98,8 @@ def main(argv):
         else:
             raise
     for dataFileName, inputData in data.iteritems():
-        print dataFileName
-        pprint(inputData['intensity']['original'])
         airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
-        pprint(airData)
         dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
         originalMatrix = zip(inputData['raman'], inputData['intensity']['original'])
         airMatrix = zip(inputData['raman'], subtractedData)
