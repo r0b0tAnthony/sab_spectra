@@ -47,6 +47,13 @@ def getArgs():
         default=4000.0,
         help='Raman shift(x) maximum value to end at. Default is 4000.0. Type required is float.'
     )
+    parser.add_argument(
+        '--smooth',
+        action='store',
+        type=int,
+        default=100,
+        help='Lambda setting that smoothes airPLS baseline data.'
+    )
 
     return parser.parse_args()
 
@@ -93,7 +100,7 @@ def main(argv):
     for dataFileName, inputData in data.iteritems():
         print dataFileName
         pprint(inputData['intensity']['original'])
-        airData = airPLS.airPLS(inputData['intensity']['original'])
+        airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         pprint(airData)
         dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
