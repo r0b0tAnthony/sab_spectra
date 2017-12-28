@@ -88,7 +88,7 @@ def main(argv):
                 }
                 break
             else:
-                print 'Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
+                print 'WARNING: Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
     outputPath = os.path.abspath(args.output)
     print 'Creating Output Directory: %s' % (outputPath,)
     try:
