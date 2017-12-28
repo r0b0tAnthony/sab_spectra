@@ -2,6 +2,7 @@ import argparse, sys, os, re
 from pprint import pprint
 from airPLS import airPLS
 import numpy
+from scipy import signal
 _version = '0.1'
 
 def printData(outputData, outputPath, format = 'CSV'):
@@ -98,6 +99,9 @@ def main(argv):
         else:
             raise
     for dataFileName, inputData in data.iteritems():
+        pprint(inputData['intensity']['original'])
+        smoothedData = signal.savgol_filter(inputData['intensity']['original'], 29, 4, mode='nearest')
+        pprint(smoothedData)
         airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
