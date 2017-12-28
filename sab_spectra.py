@@ -4,6 +4,11 @@ from airPLS import airPLS
 import numpy
 _version = '0.1'
 
+def printData(outputData, outputPath, format = 'CSV'):
+    with open(outputPath, 'w') as dataFile:
+        for data in outputData:
+            dataFile.write("%f;%f\n" % data)
+
 def isArgDir(arg):
     if not os.path.isdir(arg):
         raise argparse.ArgumentTypeError("'%s' is not a directory")
@@ -89,7 +94,13 @@ def main(argv):
         print dataFileName
         pprint(inputData['intensity']['original'])
         airData = airPLS.airPLS(inputData['intensity']['original'])
+        subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         pprint(airData)
+        dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
+        originalMatrix = zip(inputData['raman'], inputData['intensity']['original'])
+        airMatrix = zip(inputData['raman'], subtractedData)
+        printData(originalMatrix, os.path.join(outputPath, dataFileName))
+        printData(airMatrix, os.path.join(outputPath, dataFileNameAir))
         break
 
 if __name__ == '__main__':
