@@ -94,7 +94,7 @@ def main(argv):
     try:
         os.makedirs(outputPath)
     except OSError as e:
-        if e[0] == 17:
+        if e[0] == 17 or e[0] == 183:
             pass
         else:
             print e[0]
