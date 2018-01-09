@@ -97,6 +97,7 @@ def main(argv):
         if e[0] == 17:
             pass
         else:
+            print e[0]
             raise
     for dataFileName, inputData in data.iteritems():
         pprint(inputData['intensity']['original'])
