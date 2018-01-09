@@ -8,7 +8,7 @@ _version = '0.1'
 def printData(outputData, outputPath, format = 'CSV'):
     with open(outputPath, 'w') as dataFile:
         for data in outputData:
-            dataFile.write("%f;%f\n" % data)
+            dataFile.write("%f,%f\n" % data)
 
 def isArgDir(arg):
     if not os.path.isdir(arg):
