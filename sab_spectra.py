@@ -3,6 +3,7 @@ from pprint import pprint
 from airPLS import airPLS
 import numpy
 from scipy import signal
+import peakutils
 _version = '0.1'
 
 def printData(outputData, outputPath, format = 'CSV'):
@@ -104,11 +105,17 @@ def main(argv):
         smoothedData = signal.savgol_filter(inputData['intensity']['original'], 29, 4, mode='nearest')
         pprint(smoothedData)
         airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth)
+        peakutilsData = peakutils.baseline(inputData['intensity']['original'])
+        subtractedPeakUtilsData = numpy.subtract(inputData['intensity']['original'], peakutilsData)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
+        dataFileNamePeak = "%s_peakutils.csv" % os.path.splitext(dataFileName)[0]
         originalMatrix = zip(inputData['raman'], inputData['intensity']['original'])
         airMatrix = zip(inputData['raman'], subtractedData)
-        printData(zip(inputData['raman'], airData), os.path.join(outputPath, 'baseline.csv'))
+        peakutilsMatrix = zip(inputData['raman'], subtractedPeakUtilsData)
+        printData(zip(inputData['raman'], airData), os.path.join(outputPath, 'air_baseline.csv'))
+        printData(zip(inputData['raman'], peakutilsData), os.path.join(outputPath, 'peakutils_baseline.csv'))
+        printData(peakutilsMatrix, os.path.join(outputPath, dataFileNamePeak))
         printData(originalMatrix, os.path.join(outputPath, dataFileName))
         printData(airMatrix, os.path.join(outputPath, dataFileNameAir))
         break
