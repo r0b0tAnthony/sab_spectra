@@ -108,6 +108,7 @@ def main(argv):
         dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
         originalMatrix = zip(inputData['raman'], inputData['intensity']['original'])
         airMatrix = zip(inputData['raman'], subtractedData)
+        printData(zip(inputData['raman'], airData), os.path.join(outputPath, 'baseline.csv'))
         printData(originalMatrix, os.path.join(outputPath, dataFileName))
         printData(airMatrix, os.path.join(outputPath, dataFileNameAir))
         break
