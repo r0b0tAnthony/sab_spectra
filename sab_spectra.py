@@ -123,7 +123,7 @@ def main(argv):
         subtractedPeakUtilsData = numpy.subtract(inputData['intensity']['original'], peakutilsData)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
-        dataFileNamePeak = "%s_peakutils_deg%d_maxint%d.csv" % (os.path.splitext(dataFileName)[0], args.deg, args.max_int)
+        dataFileNamePeak = "%s_peakutils_deg%d_maxint%d.csv" % (os.path.splitext(dataFileName)[0], args.deg, args.max_it)
         originalMatrix = zip(inputData['raman'], inputData['intensity']['original'])
         airMatrix = zip(inputData['raman'], subtractedData)
         peakutilsMatrix = zip(inputData['raman'], subtractedPeakUtilsData)
