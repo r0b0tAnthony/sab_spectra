@@ -69,7 +69,7 @@ def getArgs():
         '--max_it',
         action='store',
         type=int,
-        default=100,
+        default=15,
         help='PeakUtils baseline iteration function parameter'
     )
     parser.add_argument(
@@ -127,7 +127,7 @@ def main(argv):
         pprint(inputData['intensity']['original'])
         smoothedData = signal.savgol_filter(inputData['intensity']['original'], 29, 4, mode='nearest')
         pprint(smoothedData)
-        airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth, porder=args.porder)
+        airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth, porder=args.porder, itermax=args.max_it)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_v%%d.csv" % (os.path.splitext(dataFileName)[0], args.smooth, args.max_it)
         dataPathAir = nextVersionPath(outputPath, dataFileNameAir)
