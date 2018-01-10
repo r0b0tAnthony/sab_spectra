@@ -70,7 +70,7 @@ def getArgs():
         action='store',
         type=int,
         default=15,
-        help='PeakUtils baseline iteration function parameter'
+        help='AirPLS baseline iteration function parameter'
     )
     parser.add_argument(
         '--porder',
