@@ -72,6 +72,13 @@ def getArgs():
         default=100,
         help='PeakUtils baseline iteration function parameter'
     )
+    parser.add_argument(
+        '--porder',
+        action='store',
+        type=int,
+        default=1,
+        help='AirPLS: adaptive iteratively reweighted penalized least squares for baseline fitting'
+    )
 
     return parser.parse_args()
 
@@ -120,7 +127,7 @@ def main(argv):
         pprint(inputData['intensity']['original'])
         smoothedData = signal.savgol_filter(inputData['intensity']['original'], 29, 4, mode='nearest')
         pprint(smoothedData)
-        airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth)
+        airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth, porder=args.porder)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_v%%d.csv" % (os.path.splitext(dataFileName)[0], args.smooth, args.max_it)
         dataPathAir = nextVersionPath(outputPath, dataFileNameAir)
@@ -128,7 +135,7 @@ def main(argv):
         airMatrix = zip(inputData['raman'], subtractedData)
         printData(zip(inputData['raman'], airData), os.path.join(outputPath, 'air_baseline.csv'))
         printData(originalMatrix, os.path.join(outputPath, dataFileName))
-        printData(airMatrix, os.path.join(outputPath, dataPathAir)
+        printData(airMatrix, dataPathAir)
         break
 
 if __name__ == '__main__':
