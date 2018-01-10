@@ -56,6 +56,20 @@ def getArgs():
         default=100,
         help='Lambda setting that smoothes airPLS baseline data.'
     )
+    parser.add_argument(
+        '--deg',
+        action='store',
+        type=int,
+        default=3,
+        help='PeakUtils baseline degree function parameter'
+    )
+    parser.add_argument(
+        '--max_it',
+        action='store',
+        type=int,
+        default=100,
+        help='PeakUtils baseline interval function parameter'
+    )
 
     return parser.parse_args()
 
@@ -105,7 +119,7 @@ def main(argv):
         smoothedData = signal.savgol_filter(inputData['intensity']['original'], 29, 4, mode='nearest')
         pprint(smoothedData)
         airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth)
-        peakutilsData = peakutils.baseline(inputData['intensity']['original'])
+        peakutilsData = peakutils.baseline(inputData['intensity']['original'], deg=args.deg, max_it=args.max_it)
         subtractedPeakUtilsData = numpy.subtract(inputData['intensity']['original'], peakutilsData)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
