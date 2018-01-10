@@ -130,12 +130,13 @@ def main(argv):
         pprint(smoothedData)
         airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
-        dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
+        dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_v%%d.csv" % (os.path.splitext(dataFileName)[0], args.smooth, args.max_it)
+        dataPathAir = nextVersionPath(outputPath, dataFileNameAir)
         originalMatrix = zip(inputData['raman'], inputData['intensity']['original'])
         airMatrix = zip(inputData['raman'], subtractedData)
         printData(zip(inputData['raman'], airData), os.path.join(outputPath, 'air_baseline.csv'))
         printData(originalMatrix, os.path.join(outputPath, dataFileName))
-        printData(airMatrix, os.path.join(outputPath, dataFileNameAir))
+        printData(airMatrix, os.path.join(outputPath, dataPathAir)
         break
 
 if __name__ == '__main__':
