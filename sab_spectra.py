@@ -79,6 +79,18 @@ def getArgs():
         default=1,
         help='AirPLS: adaptive iteratively reweighted penalized least squares for baseline fitting'
     )
+    parser.add_argument(
+        '--method',
+        action='store',
+        type=str,
+        required=True,
+        choices=['a', 'b', 'ab'],
+        help="""
+        Method of how the data is processed. Method 'a' will output individual baselined files and an average of all baselines.
+        Method 'b' will average all the data and then baseline that avg.
+        Method 'ab' combines both methods 'a' and 'b'.
+        """
+    )
 
     return parser.parse_args()
 
@@ -89,6 +101,7 @@ def main(argv):
     if args.min >= args.max:
         raise argparse.ArgumentError('--max', 'Your float value for --max must be greater than your --min value.')
     data = {}
+    dirData = {'raman': [], 'intensity': []}
     for fileName in os.listdir(args.input):
         if fileName[-3:] == 'txt':
             filePath = os.path.join(args.input, fileName)
@@ -96,6 +109,7 @@ def main(argv):
                 print "Reading In File: %s" % filePath
                 filteredDataRaman = []
                 filteredDataIntensity = []
+                i = 0
                 for line in dataFile:
                     line = line.strip()
                     dataMatch = dataRe.match(line)
@@ -103,18 +117,34 @@ def main(argv):
                         ramanShift = float(dataMatch.group('ramanShift'))
                         if ramanShift >= args.min and ramanShift <= args.max:
                             filteredDataRaman.append(ramanShift)
-                            filteredDataIntensity.append(float(dataMatch.group('intensity')))
+                            intensity = float(dataMatch.group('intensity'))
+                            filteredDataIntensity.append(intensity)
+                            try:
+                                dirData['raman'][i] = ramanShift
+                                dirData['intensity'][i].append(intensity)
+                            except IndexError:
+                                dirData['raman'].append(ramanShift)
+                                dirData['intensity'].append([intensity])
+                            i += 1
                 if len(filteredDataRaman) > 1:
+                    print i
                     data[fileName] = {
                         'raman': numpy.array(filteredDataRaman),
                         'intensity': {
                             'original': numpy.array(filteredDataIntensity)
                         }
                     }
-                    break
                 else:
                     print 'WARNING: Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
     outputPath = os.path.abspath(args.output)
+    if 'b' in args.method:
+        dirAvg = numpy.array(dirData['intensity']).mean(axis=1)
+        dirAvgBaseline = airPLS.airPLS(dirAvg, lambda_=args.smooth, porder=args.porder, itermax=args.max_it)
+        dirAvgSubtracted = numpy.subtract(dirAvg, dirAvgBaseline)
+        dirAvgFileName = "dir_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (args.smooth, args.porder, args.max_it)
+        dirAvgPath = nextVersionPath(outputPath, dirAvgFileName)
+        printData(zip(dirData['raman'], dirAvgSubtracted), dirAvgPath)
+    exit()
     print 'Creating Output Directory: %s' % (outputPath,)
     try:
         os.makedirs(outputPath)
