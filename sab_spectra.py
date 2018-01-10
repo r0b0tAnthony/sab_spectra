@@ -129,6 +129,7 @@ def main(argv):
         pprint(smoothedData)
         airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth, porder=args.porder, itermax=args.max_it)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
+        inputData['intensity']['airpls'] = subtractedData
         dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (os.path.splitext(dataFileName)[0], args.smooth, args.max_it, args.porder)
         dataPathAir = nextVersionPath(outputPath, dataFileNameAir)
         originalMatrix = zip(inputData['raman'], inputData['intensity']['original'])
