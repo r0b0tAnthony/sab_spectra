@@ -64,7 +64,7 @@ def getArgs():
         help='PeakUtils baseline degree function parameter'
     )
     parser.add_argument(
-        '--max_it',
+        '--max_int',
         action='store',
         type=int,
         default=100,
@@ -119,11 +119,11 @@ def main(argv):
         smoothedData = signal.savgol_filter(inputData['intensity']['original'], 29, 4, mode='nearest')
         pprint(smoothedData)
         airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth)
-        peakutilsData = peakutils.baseline(inputData['intensity']['original'], deg=args.deg, max_it=args.max_it)
+        peakutilsData = peakutils.baseline(inputData['intensity']['original'], deg=args.deg, max_int=args.max_int)
         subtractedPeakUtilsData = numpy.subtract(inputData['intensity']['original'], peakutilsData)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
-        dataFileNamePeak = "%s_peakutils.csv" % os.path.splitext(dataFileName)[0]
+        dataFileNamePeak = "%s_peakutils_deg%d_maxint%d.csv" % (os.path.splitext(dataFileName)[0], args.deg, args.max_int)
         originalMatrix = zip(inputData['raman'], inputData['intensity']['original'])
         airMatrix = zip(inputData['raman'], subtractedData)
         peakutilsMatrix = zip(inputData['raman'], subtractedPeakUtilsData)
