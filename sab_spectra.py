@@ -3,7 +3,6 @@ from pprint import pprint
 from airPLS import airPLS
 import numpy
 from scipy import signal
-import peakutils
 _version = '0.1'
 
 def nextVersionPath(root_path, file_format, version=1):
