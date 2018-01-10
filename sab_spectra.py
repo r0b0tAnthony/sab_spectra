@@ -127,7 +127,6 @@ def main(argv):
                                 dirData['intensity'].append([intensity])
                             i += 1
                 if len(filteredDataRaman) > 1:
-                    print i
                     data[fileName] = {
                         'raman': numpy.array(filteredDataRaman),
                         'intensity': {
