@@ -8,8 +8,6 @@ _version = '0.1'
 
 def nextVersionPath(root_path, file_format, version=1):
     version_path = getVersionPath(root_path, file_format, version)
-    print version_path
-    print (os.path.exists(version_path))
     while os.path.exists(version_path):
         version += 1
         version_path = getVersionPath(root_path, file_format, version)
