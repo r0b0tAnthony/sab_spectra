@@ -136,6 +136,15 @@ def main(argv):
                 else:
                     print 'WARNING: Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
     outputPath = os.path.abspath(args.output)
+    print 'Creating Output Directory: %s' % (outputPath,)
+    try:
+        os.makedirs(outputPath)
+    except OSError as e:
+        if e[0] == 17 or e[0] == 183:
+            pass
+        else:
+            print e[0]
+            raise
     if 'b' in args.method:
         print 'Running Method B: Averaging All Data and Then Baselining'
         dirAvg = numpy.array(dirData['intensity']).mean(axis=1)
@@ -147,15 +156,6 @@ def main(argv):
         printData(zip(dirData['raman'], dirAvgSubtracted), dirAvgPath)
         print 'Saved Method B to: ', dirAvgPath
         exit()
-    print 'Creating Output Directory: %s' % (outputPath,)
-    try:
-        os.makedirs(outputPath)
-    except OSError as e:
-        if e[0] == 17 or e[0] == 183:
-            pass
-        else:
-            print e[0]
-            raise
     for dataFileName, inputData in data.iteritems():
         pprint(inputData['intensity']['original'])
         smoothedData = signal.savgol_filter(inputData['intensity']['original'], 29, 4, mode='nearest')
