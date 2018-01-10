@@ -66,13 +66,6 @@ def getArgs():
         help='Lambda setting that smoothes airPLS baseline data.'
     )
     parser.add_argument(
-        '--deg',
-        action='store',
-        type=int,
-        default=3,
-        help='PeakUtils baseline degree function parameter'
-    )
-    parser.add_argument(
         '--max_it',
         action='store',
         type=int,
