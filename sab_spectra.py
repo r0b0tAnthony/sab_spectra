@@ -136,6 +136,7 @@ def main(argv):
                 else:
                     print 'WARNING: Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
     outputPath = os.path.abspath(args.output)
+    inputPathBasename = os.path.basename(args.input)
     print 'Creating Output Directory: %s' % (outputPath,)
     try:
         os.makedirs(outputPath)
@@ -150,7 +151,7 @@ def main(argv):
         dirAvg = numpy.array(dirData['intensity']).mean(axis=1)
         dirAvgBaseline = airPLS.airPLS(dirAvg, lambda_=args.smooth, porder=args.porder, itermax=args.max_it)
         dirAvgSubtracted = numpy.subtract(dirAvg, dirAvgBaseline)
-        dirAvgFileName = "dir_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (args.smooth, args.porder, args.max_it)
+        dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, args.smooth, args.porder, args.max_it)
         dirAvgPath = nextVersionPath(outputPath, dirAvgFileName)
 
         printData(zip(dirData['raman'], dirAvgSubtracted), dirAvgPath)
