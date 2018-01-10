@@ -90,29 +90,30 @@ def main(argv):
         raise argparse.ArgumentError('--max', 'Your float value for --max must be greater than your --min value.')
     data = {}
     for fileName in os.listdir(args.input):
-        filePath = os.path.join(args.input, fileName)
-        with open(filePath, 'r') as dataFile:
-            print "Reading In File: %s" % filePath
-            filteredDataRaman = []
-            filteredDataIntensity = []
-            for line in dataFile:
-                line = line.strip()
-                dataMatch = dataRe.match(line)
-                if dataMatch:
-                    ramanShift = float(dataMatch.group('ramanShift'))
-                    if ramanShift >= args.min and ramanShift <= args.max:
-                        filteredDataRaman.append(ramanShift)
-                        filteredDataIntensity.append(float(dataMatch.group('intensity')))
-            if len(filteredDataRaman) > 1:
-                data[fileName] = {
-                    'raman': numpy.array(filteredDataRaman),
-                    'intensity': {
-                        'original': numpy.array(filteredDataIntensity)
+        if fileName[-3:] == 'txt':
+            filePath = os.path.join(args.input, fileName)
+            with open(filePath, 'r') as dataFile:
+                print "Reading In File: %s" % filePath
+                filteredDataRaman = []
+                filteredDataIntensity = []
+                for line in dataFile:
+                    line = line.strip()
+                    dataMatch = dataRe.match(line)
+                    if dataMatch:
+                        ramanShift = float(dataMatch.group('ramanShift'))
+                        if ramanShift >= args.min and ramanShift <= args.max:
+                            filteredDataRaman.append(ramanShift)
+                            filteredDataIntensity.append(float(dataMatch.group('intensity')))
+                if len(filteredDataRaman) > 1:
+                    data[fileName] = {
+                        'raman': numpy.array(filteredDataRaman),
+                        'intensity': {
+                            'original': numpy.array(filteredDataIntensity)
+                        }
                     }
-                }
-                break
-            else:
-                print 'WARNING: Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
+                    break
+                else:
+                    print 'WARNING: Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
     outputPath = os.path.abspath(args.output)
     print 'Creating Output Directory: %s' % (outputPath,)
     try:
