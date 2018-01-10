@@ -6,6 +6,18 @@ from scipy import signal
 import peakutils
 _version = '0.1'
 
+def nextVersionPath(root_path, file_format, version=1):
+    version_path = getVersionPath(root_path, file_format, version)
+    print version_path
+    print (os.path.exists(version_path))
+    while os.path.exists(version_path):
+        version += 1
+        version_path = getVersionPath(root_path, file_format, version)
+    return version_path
+
+def getVersionPath(root_path, file_format, version):
+    return os.path.join(root_path, file_format % (version))
+
 def printData(outputData, outputPath, format = 'CSV'):
     with open(outputPath, 'w') as dataFile:
         for data in outputData:
@@ -119,17 +131,11 @@ def main(argv):
         smoothedData = signal.savgol_filter(inputData['intensity']['original'], 29, 4, mode='nearest')
         pprint(smoothedData)
         airData = airPLS.airPLS(inputData['intensity']['original'], lambda_=args.smooth)
-        peakutilsData = peakutils.baseline(inputData['intensity']['original'], deg=args.deg, max_it=args.max_it)
-        subtractedPeakUtilsData = numpy.subtract(inputData['intensity']['original'], peakutilsData)
         subtractedData = numpy.subtract(inputData['intensity']['original'], airData)
         dataFileNameAir = "%s_airPLS.csv" % os.path.splitext(dataFileName)[0]
-        dataFileNamePeak = "%s_peakutils_deg%d_maxit%d.csv" % (os.path.splitext(dataFileName)[0], args.deg, args.max_it)
         originalMatrix = zip(inputData['raman'], inputData['intensity']['original'])
         airMatrix = zip(inputData['raman'], subtractedData)
-        peakutilsMatrix = zip(inputData['raman'], subtractedPeakUtilsData)
         printData(zip(inputData['raman'], airData), os.path.join(outputPath, 'air_baseline.csv'))
-        printData(zip(inputData['raman'], peakutilsData), os.path.join(outputPath, 'peakutils_baseline_deg%d_maxit%d.csv' % (args.deg, args.max_it)))
-        printData(peakutilsMatrix, os.path.join(outputPath, dataFileNamePeak))
         printData(originalMatrix, os.path.join(outputPath, dataFileName))
         printData(airMatrix, os.path.join(outputPath, dataFileNameAir))
         break
