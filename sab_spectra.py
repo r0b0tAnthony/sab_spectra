@@ -29,7 +29,7 @@ def isArgDir(arg):
 def mainMenu(totalDataSets, settings):
     editSettingsPrompt = "Edit Settings(Min: %(min)f, Max: %(max)f, Method: %(method)s, Smooth: %(smooth)d, POrder: %(porder)d, Max It: %(max_it)d)" % settings
     menuOptions = [
-        {'selector': '1', 'prompt': "Add Data Sets(Total: %d)" % len(totalDataSets)},
+        {'selector': '1', 'prompt': "Data Sets(Total: %d)" % len(totalDataSets)},
         {'selector': '2', 'prompt': editSettingsPrompt},
         {'selector': '3', 'prompt': 'Process Data Sets'},
         {'selector': '4', 'prompt': 'Quit Sab Spectra'}
@@ -38,6 +38,23 @@ def mainMenu(totalDataSets, settings):
 
     return menuChoice
 
+def dataSetsMenu(dataSets):
+    puts("Current Data Sets:")
+    with indent(4):
+        for dataSetName, dataDirs in dataSets.iteritems():
+            puts("Data Set Name: %s" % dataSetName)
+            with indent(4):
+                puts("Input: %s" % dataDirs['input'])
+                puts("Output: %s" % dataDirs['output'])
+
+    puts("\n=======================\n")
+
+    menuOptions = [
+        {'selector': '1', 'prompt': 'Modify Data Sets'},
+        {'selector': '2', 'prompt': 'Back to Main Menu'}
+    ]
+
+    return prompt.options('Data Sets Menu:', menuOptions, default='1')
 
 def main(argv):
     puts("Welcome to Sab Spectra %s" % (_version))
@@ -78,6 +95,9 @@ def main(argv):
     menuChoice = 0
     while menuChoice != '4':
         menuChoice = mainMenu(dataDirs, settings)
+
+        if menuChoice == '1':
+            dataMenuChoice = dataSetsMenu(dataDirs)
 
     puts('Sab Spectra Quitting')
     exit()
