@@ -3,7 +3,8 @@ from pprint import pprint
 from airPLS import airPLS
 import numpy
 from scipy import signal
-_version = '0.1'
+from clint.textui import prompt, puts, colored, validators, indent
+_version = '1.0'
 
 def nextVersionPath(root_path, file_format, version=1):
     version_path = getVersionPath(root_path, file_format, version)
@@ -25,77 +26,34 @@ def isArgDir(arg):
         raise argparse.ArgumentTypeError("'%s' is not a directory")
     return arg
 
-def getArgs():
-    argEpilog = "sab_spectra Version %s. MIT License" % _version
-    argDescription = "sab_spectra takes in XY(raman shift, intensity) from a directory of text files formatted in two side by side columns with white-space delimiters. Output is a directory with two sub-directories for 'method-a' and 'method-b' proccessing of the data. See README.md for description of processing methods."
-    parser = argparse.ArgumentParser(version=_version, prog='sab_spectra.py', epilog=argEpilog, description=argDescription)
-    parser.add_argument(
-        '-i',
-        '--input',
-        action='store',
-        type=isArgDir,
-        help='Input directory of text files containing raman shift in column 1(x) and intensity in column 2(y)'
-    )
-    parser.add_argument(
-        '-o',
-        '--output',
-        action='store',
-        type=str,
-        required=True,
-        help='Output directory where a method-a and method-b folder will be generated with the input data. See README.md for method-a and method-b explanations.'
-    )
-    parser.add_argument(
-        '--min',
-        action='store',
-        type=float,
-        default=0.0,
-        help='Raman shift(x) minimum value to start at. Default is 0.0. Type required is float.'
-    )
-    parser.add_argument(
-        '--max',
-        action='store',
-        type=float,
-        default=4000.0,
-        help='Raman shift(x) maximum value to end at. Default is 4000.0. Type required is float.'
-    )
-    parser.add_argument(
-        '--smooth',
-        action='store',
-        type=int,
-        default=100,
-        help='Lambda setting that smoothes airPLS baseline data.'
-    )
-    parser.add_argument(
-        '--max_it',
-        action='store',
-        type=int,
-        default=15,
-        help='AirPLS baseline iteration function parameter'
-    )
-    parser.add_argument(
-        '--porder',
-        action='store',
-        type=int,
-        default=1,
-        help='AirPLS: adaptive iteratively reweighted penalized least squares for baseline fitting'
-    )
-    parser.add_argument(
-        '--method',
-        action='store',
-        type=str,
-        required=True,
-        choices=['a', 'b', 'ab'],
-        help="""
-        Method of how the data is processed. Method 'a' will output individual baselined files and an average of all baselines.
-        Method 'b' will average all the data and then baseline that avg.
-        Method 'ab' combines both methods 'a' and 'b'.
-        """
-    )
-
-    return parser.parse_args()
-
 
 def main(argv):
+    puts("Welcome to Sab Spectra %s" % (_version))
+    with indent(4):
+        puts("""
+             Sab Spectra takes raman(x) and intensity(y) in CSV txt files separated by tabs and outputs averaged\n
+             and baselined data through several methods.
+         """)
+    dataDirs = {}
+    addMoreData = False
+    while len(dataDirs) < 1 or addMoreData:
+        contineAdding = True
+        dataName = prompt.query("Data Name:")
+        if dataName in dataDirs:
+            puts(colored.yellow("WARNING: '%s' already exists in data list" % (dataName, )))
+            contineAdding = prompt.yn("Edit '%s' Data Settings?" % (dataName, ))
+        if contineAdding:
+            dataInputDir = prompt.query("Data Input Directory:", validators=[validators.PathValidator()])
+            dataOutputDir = prompt.query("Data Output Directory:", validators=[validators.PathValidator()])
+
+            dataDirs[dataName] = {
+                'input': dataInputDir,
+                'output': dataOutputDir
+            }
+            #Weirdly clint compares answer against default in order to return boolean
+            addMoreData = not prompt.yn('Add More Data?', default='n')
+
+    exit()
     args = getArgs()
     dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
     if args.min >= args.max:
