@@ -33,7 +33,7 @@ def putSeparator(char='=', length=20):
 def mainMenu(totalDataSets, settings):
     editSettingsPrompt = "Edit Settings(Min: %(min)f, Max: %(max)f, Method: %(method)s, Smooth: %(smooth)d, POrder: %(porder)d, Max It: %(max_it)d)" % settings
     menuOptions = [
-        {'selector': '1', 'prompt': "Data Sets(Total: %d)" % len(totalDataSets)},
+        {'selector': '1', 'prompt': "Data Sets(Total: %d)" % totalDataSets},
         {'selector': '2', 'prompt': editSettingsPrompt},
         {'selector': '3', 'prompt': 'Process Data Sets'},
         {'selector': '4', 'prompt': 'Quit Sab Spectra'}
@@ -104,7 +104,7 @@ def main(argv):
             addMoreData = not prompt.yn('Add More Data?', default='n')
     menuChoice = 0
     while menuChoice != '4':
-        menuChoice = mainMenu(dataDirs, settings)
+        menuChoice = mainMenu(len(dataDirs['active']) + len(dataDirs['inactive']), settings)
 
         if menuChoice == '1':
             dataMenuChoice = dataSetsMenu(dataDirs)
