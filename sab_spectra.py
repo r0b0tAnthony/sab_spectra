@@ -45,12 +45,17 @@ def dataSetsMenu(dataSets):
     putSeparator()
     puts("Current Data Sets:")
     with indent(4):
-        for dataSetName, dataSetSettings in dataSets.iteritems():
-            puts("Data Set Name: %s" % dataSetName)
+        for dataState, dataSets in dataSets.iteritems():
+            if dataState == 'active':
+                puts(colored.green("Active:"))
+            else:
+                puts(colored.red("Inactive:"))
             with indent(4):
-                puts("Input: %s" % dataSetSettings['input'])
-                puts("Output: %s" % dataSetSettings['output'])
-                puts("Active: %s" % dataSetSettings['active'])
+                for dataSetName, dataSetSettings in dataSets.iteritems():
+                    puts("Data Set Name: %s" % dataSetName)
+                    with indent(4):
+                        puts("Input: %s" % dataSetSettings['input'])
+                        puts("Output: %s" % dataSetSettings['output'])
 
     putSeparator('-', 10)
 
@@ -79,9 +84,9 @@ def main(argv):
     }
     settings = dict(defaultSettings)
 
-    dataDirs = {}
+    dataDirs = {'active': {}, 'inactive': {}}
     addMoreData = False
-    while len(dataDirs) < 1 or addMoreData:
+    while len(dataDirs['active']) < 1 or addMoreData:
         contineAdding = True
         dataName = prompt.query("Data Set Name:")
         if dataName in dataDirs:
@@ -90,12 +95,10 @@ def main(argv):
         if contineAdding:
             dataInputDir = prompt.query("Data Input Directory:", validators=[validators.PathValidator()])
             dataOutputDir = prompt.query("Data Output Directory:", validators=[validators.PathValidator()])
-            dataActive = prompt.yn("Active:")
-
-            dataDirs[dataName] = {
+            dataState = 'active' if prompt.yn("Active:") else 'inactive'
+            dataDirs[dataState][dataName] = {
                 'input': dataInputDir,
-                'output': dataOutputDir,
-                'active': dataActive
+                'output': dataOutputDir
             }
             #Weirdly clint compares answer against default in order to return boolean
             addMoreData = not prompt.yn('Add More Data?', default='n')
