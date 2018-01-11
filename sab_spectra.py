@@ -34,6 +34,17 @@ def main(argv):
              Sab Spectra takes raman(x) and intensity(y) in CSV txt files separated by tabs and outputs averaged\n
              and baselined data through several methods.
          """)
+
+    defaultSettings = {
+     'max': 4000,
+     'min': 0,
+     'smooth': 100,
+     'max_it': 15,
+     'porder': 1,
+     'method': 'b'
+    }
+    settings = dict(defaultSettings)
+    
     dataDirs = {}
     addMoreData = False
     while len(dataDirs) < 1 or addMoreData:
@@ -52,6 +63,7 @@ def main(argv):
             }
             #Weirdly clint compares answer against default in order to return boolean
             addMoreData = not prompt.yn('Add More Data?', default='n')
+
 
     exit()
     args = getArgs()
