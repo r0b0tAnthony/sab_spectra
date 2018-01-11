@@ -45,11 +45,12 @@ def dataSetsMenu(dataSets):
     putSeparator()
     puts("Current Data Sets:")
     with indent(4):
-        for dataSetName, dataDirs in dataSets.iteritems():
+        for dataSetName, dataSetSettings in dataSets.iteritems():
             puts("Data Set Name: %s" % dataSetName)
             with indent(4):
-                puts("Input: %s" % dataDirs['input'])
-                puts("Output: %s" % dataDirs['output'])
+                puts("Input: %s" % dataSetSettings['input'])
+                puts("Output: %s" % dataSetSettings['output'])
+                puts("Active: %s" % dataSetSettings['active'])
 
     putSeparator('-', 10)
 
@@ -89,10 +90,12 @@ def main(argv):
         if contineAdding:
             dataInputDir = prompt.query("Data Input Directory:", validators=[validators.PathValidator()])
             dataOutputDir = prompt.query("Data Output Directory:", validators=[validators.PathValidator()])
+            dataActive = prompt.yn("Active:")
 
             dataDirs[dataName] = {
                 'input': dataInputDir,
-                'output': dataOutputDir
+                'output': dataOutputDir,
+                'active': dataActive
             }
             #Weirdly clint compares answer against default in order to return boolean
             addMoreData = not prompt.yn('Add More Data?', default='n')
