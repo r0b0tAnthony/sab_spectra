@@ -82,7 +82,7 @@ def main(argv):
     addMoreData = False
     while len(dataDirs) < 1 or addMoreData:
         contineAdding = True
-        dataName = prompt.query("Data Name:")
+        dataName = prompt.query("Data Set Name:")
         if dataName in dataDirs:
             puts(colored.yellow("WARNING: '%s' already exists in data list" % (dataName, )))
             contineAdding = prompt.yn("Edit '%s' Data Settings?" % (dataName, ))
