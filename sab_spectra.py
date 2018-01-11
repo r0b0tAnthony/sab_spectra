@@ -26,6 +26,10 @@ def isArgDir(arg):
         raise argparse.ArgumentTypeError("'%s' is not a directory")
     return arg
 
+def putSeparator(char='=', length=20):
+    separator = char * length
+    puts("\n%s\n" % separator)
+
 def mainMenu(totalDataSets, settings):
     editSettingsPrompt = "Edit Settings(Min: %(min)f, Max: %(max)f, Method: %(method)s, Smooth: %(smooth)d, POrder: %(porder)d, Max It: %(max_it)d)" % settings
     menuOptions = [
@@ -34,10 +38,11 @@ def mainMenu(totalDataSets, settings):
         {'selector': '3', 'prompt': 'Process Data Sets'},
         {'selector': '4', 'prompt': 'Quit Sab Spectra'}
     ]
-
+    putSeparator()
     return prompt.options('Main Menu:', menuOptions, default='3')
 
 def dataSetsMenu(dataSets):
+    putSeparator()
     puts("Current Data Sets:")
     with indent(4):
         for dataSetName, dataDirs in dataSets.iteritems():
@@ -46,7 +51,7 @@ def dataSetsMenu(dataSets):
                 puts("Input: %s" % dataDirs['input'])
                 puts("Output: %s" % dataDirs['output'])
 
-    puts("\n=======================\n")
+    putSeparator('-', 10)
 
     menuOptions = [
         {'selector': '1', 'prompt': 'Modify Data Sets'},
