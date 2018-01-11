@@ -34,9 +34,8 @@ def mainMenu(totalDataSets, settings):
         {'selector': '3', 'prompt': 'Process Data Sets'},
         {'selector': '4', 'prompt': 'Quit Sab Spectra'}
     ]
-    menuChoice = prompt.options('Menu:', menuOptions, default='3')
 
-    return menuChoice
+    return prompt.options('Main Menu:', menuOptions, default='3')
 
 def dataSetsMenu(dataSets):
     puts("Current Data Sets:")
