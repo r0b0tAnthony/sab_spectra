@@ -38,7 +38,7 @@ def mainMenu(totalDataSets, settings):
 
     if menuChoice == '4':
         puts('Sab Spectra Quitting')
-        exit()
+        return menuChoice
 
 
 def main(argv):
@@ -77,8 +77,9 @@ def main(argv):
             }
             #Weirdly clint compares answer against default in order to return boolean
             addMoreData = not prompt.yn('Add More Data?', default='n')
-
-    mainMenu(len(dataDirs), settings)
+    menuChoice = 0
+    while menuChoice != '4':
+        menuChoice = mainMenu(len(dataDirs), settings)
     exit()
     args = getArgs()
     dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
