@@ -26,6 +26,20 @@ def isArgDir(arg):
         raise argparse.ArgumentTypeError("'%s' is not a directory")
     return arg
 
+def runMenu(totalDataSets, settings):
+    editSettingsPrompt = "Edit Settings(Min: %(min)f, Max: %(max)f, Method: %(method)s, Smooth: %(smooth)d, POrder: %(porder)d, Max It: %(max_it)d)" % settings
+    menuOptions = [
+        {'selector': '1', 'prompt': "Add Data Sets(Total: %d)" % totalDataSets},
+        {'selector': '2', 'prompt': editSettingsPrompt},
+        {'selector': '3', 'prompt': 'Process Data Sets'},
+        {'selector': '4', 'prompt': 'Quit Sab Spectra'}
+    ]
+    menuChoice = prompt.options('Menu:', menuOptions, default='3')
+    
+    if menuChoice == '4':
+        puts('Sab Spectra Quitting')
+        exit()
+
 
 def main(argv):
     puts("Welcome to Sab Spectra %s" % (_version))
@@ -44,7 +58,7 @@ def main(argv):
      'method': 'b'
     }
     settings = dict(defaultSettings)
-    
+
     dataDirs = {}
     addMoreData = False
     while len(dataDirs) < 1 or addMoreData:
@@ -64,7 +78,7 @@ def main(argv):
             #Weirdly clint compares answer against default in order to return boolean
             addMoreData = not prompt.yn('Add More Data?', default='n')
 
-
+    runMenu(len(dataDirs), settings)
     exit()
     args = getArgs()
     dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
