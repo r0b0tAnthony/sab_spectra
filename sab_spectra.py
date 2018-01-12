@@ -4,6 +4,7 @@ from airPLS import airPLS
 import numpy
 from scipy import signal
 from clint.textui import prompt, puts, colored, validators, indent
+from sab_clint import validators as sab_validators
 _version = '1.0'
 
 def nextVersionPath(root_path, file_format, version=1):
@@ -66,7 +67,7 @@ def modifyDataSets(dataSets):
                 except KeyError:
                     defaultInput = ''
                     defaultOutput = ''
-            dataInputDir = prompt.query("Data Input Directory:", validators=[validators.PathValidator()], default=defaultInput)
+            dataInputDir = prompt.query("Data Input Directory:", default=defaultInput, validators=[sab_validators.PathValidator()])
             dataOutputDir = prompt.query("Data Output Directory:", validators=[validators.PathValidator()], default=defaultOutput)
             dataState = 'active' if prompt.yn("Active:") else 'inactive'
 
