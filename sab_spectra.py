@@ -50,15 +50,29 @@ def modifyDataSets(dataSets):
     putSeparator('-', 10)
     modifyingData = True
     while modifyingData or len(dataSets['active']) < 1:
-        contineAdding = True
+        contineEditing = True
         dataName = prompt.query("Data Set Name:")
         if dataName in dataSets['active'] or dataName in dataSets['inactive']:
             puts(colored.yellow("WARNING: '%s' already exists in data list" % (dataName, )))
-            contineAdding = prompt.yn("Edit '%s' Data Settings?" % (dataName, ))
-        if contineAdding:
-            dataInputDir = prompt.query("Data Input Directory:", validators=[validators.PathValidator()])
-            dataOutputDir = prompt.query("Data Output Directory:", validators=[validators.PathValidator()])
+            contineEditing = prompt.yn("Edit '%s' Data Settings?" % (dataName, ))
+        if contineEditing:
+            try:
+                defaultInput = dataSets['active'][dataName]['input']
+                defaultOutput = dataSets['active'][dataName]['output']
+            except KeyError:
+                try:
+                    defaultInput = dataSets['inactive'][dataName]['input']
+                    defaultOutput = dataSets['inactive'][dataName]['output']
+                except KeyError:
+                    defaultInput = ''
+                    defaultOutput = ''
+            dataInputDir = prompt.query("Data Input Directory:", validators=[validators.PathValidator()], default=defaultInput)
+            dataOutputDir = prompt.query("Data Output Directory:", validators=[validators.PathValidator()], default=defaultOutput)
             dataState = 'active' if prompt.yn("Active:") else 'inactive'
+
+            dataSets['active'].pop(dataName, None)
+            dataSets['inactive'].pop(dataName, None)
+
             dataSets[dataState][dataName] = {
                 'input': dataInputDir,
                 'output': dataOutputDir
