@@ -26,6 +26,44 @@ def isArgDir(arg):
         raise argparse.ArgumentTypeError("'%s' is not a directory")
     return arg
 
+def printDataSets(allDataSets):
+    for dataState, dataSets in allDataSets.iteritems():
+        if dataState == 'active':
+            puts(colored.green("Active:"))
+        else:
+            puts(colored.red("Inactive:"))
+        with indent(4):
+            if len(dataSets) < 1:
+                puts('No Data Sets')
+                continue
+            for dataSetName, dataSetSettings in dataSets.iteritems():
+                puts("Data Set Name: %s" % dataSetName)
+                with indent(4):
+                    puts("Input: %s" % dataSetSettings['input'])
+                    puts("Output: %s" % dataSetSettings['output'])
+
+def modifyDataSets(dataSets):
+    putSeparator()
+    printDataSets(dataSets)
+    putSeparator('-', 10)
+    addMoreData = False
+    while len(dataSets['active']) < 1 or addMoreData:
+        contineAdding = True
+        dataName = prompt.query("Data Set Name:")
+        if dataName in dataSets['active'] or dataName in dataSets['inactive']:
+            puts(colored.yellow("WARNING: '%s' already exists in data list" % (dataName, )))
+            contineAdding = prompt.yn("Edit '%s' Data Settings?" % (dataName, ))
+        if contineAdding:
+            dataInputDir = prompt.query("Data Input Directory:", validators=[validators.PathValidator()])
+            dataOutputDir = prompt.query("Data Output Directory:", validators=[validators.PathValidator()])
+            dataState = 'active' if prompt.yn("Active:") else 'inactive'
+            dataSets[dataState][dataName] = {
+                'input': dataInputDir,
+                'output': dataOutputDir
+            }
+            #Weirdly clint compares answer against default in order to return boolean
+            addMoreData = not prompt.yn('Add More Data?', default='n')
+
 def putSeparator(char='=', length=20):
     separator = char * length
     puts("\n%s\n" % separator)
@@ -45,17 +83,7 @@ def dataSetsMenu(dataSets):
     putSeparator()
     puts("Current Data Sets:")
     with indent(4):
-        for dataState, dataSets in dataSets.iteritems():
-            if dataState == 'active':
-                puts(colored.green("Active:"))
-            else:
-                puts(colored.red("Inactive:"))
-            with indent(4):
-                for dataSetName, dataSetSettings in dataSets.iteritems():
-                    puts("Data Set Name: %s" % dataSetName)
-                    with indent(4):
-                        puts("Input: %s" % dataSetSettings['input'])
-                        puts("Output: %s" % dataSetSettings['output'])
+        printDataSets(dataSets)
 
     putSeparator('-', 10)
 
@@ -85,23 +113,9 @@ def main(argv):
     settings = dict(defaultSettings)
 
     dataDirs = {'active': {}, 'inactive': {}}
-    addMoreData = False
-    while len(dataDirs['active']) < 1 or addMoreData:
-        contineAdding = True
-        dataName = prompt.query("Data Set Name:")
-        if dataName in dataDirs:
-            puts(colored.yellow("WARNING: '%s' already exists in data list" % (dataName, )))
-            contineAdding = prompt.yn("Edit '%s' Data Settings?" % (dataName, ))
-        if contineAdding:
-            dataInputDir = prompt.query("Data Input Directory:", validators=[validators.PathValidator()])
-            dataOutputDir = prompt.query("Data Output Directory:", validators=[validators.PathValidator()])
-            dataState = 'active' if prompt.yn("Active:") else 'inactive'
-            dataDirs[dataState][dataName] = {
-                'input': dataInputDir,
-                'output': dataOutputDir
-            }
-            #Weirdly clint compares answer against default in order to return boolean
-            addMoreData = not prompt.yn('Add More Data?', default='n')
+
+    modifyDataSets(dataDirs)
+
     menuChoice = 0
     while menuChoice != '4':
         menuChoice = mainMenu(len(dataDirs['active']) + len(dataDirs['inactive']), settings)
