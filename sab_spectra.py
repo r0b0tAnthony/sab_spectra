@@ -44,10 +44,12 @@ def printDataSets(allDataSets):
 
 def modifyDataSets(dataSets):
     putSeparator()
+    puts("Modify Data Sets:")
+    putSeparator('-', 10)
     printDataSets(dataSets)
     putSeparator('-', 10)
-    addMoreData = False
-    while len(dataSets['active']) < 1 or addMoreData:
+    modifyingData = True
+    while modifyingData or len(dataSets['active']) < 1:
         contineAdding = True
         dataName = prompt.query("Data Set Name:")
         if dataName in dataSets['active'] or dataName in dataSets['inactive']:
@@ -62,7 +64,7 @@ def modifyDataSets(dataSets):
                 'output': dataOutputDir
             }
             #Weirdly clint compares answer against default in order to return boolean
-            addMoreData = not prompt.yn('Add More Data?', default='n')
+            modifyingData = not prompt.yn('Continue Modifying Data Sets?', default='n')
 
 def putSeparator(char='=', length=20):
     separator = char * length
@@ -122,6 +124,10 @@ def main(argv):
 
         if menuChoice == '1':
             dataMenuChoice = dataSetsMenu(dataDirs)
+            print dataMenuChoice
+            if dataMenuChoice == '1':
+                print "Gonna Modify Data Sets"
+                modifyDataSets(dataDirs)
 
     puts('Sab Spectra Quitting')
     exit()
