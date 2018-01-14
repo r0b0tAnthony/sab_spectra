@@ -128,6 +128,58 @@ def dataSetsMenu(dataSets):
 
     return prompt.options('Data Sets Menu:', menuOptions, default='1')
 
+def filterDataSet(xmin, xmax, dataSetName, dataSet, dataRe):
+    puts('Filtering Data Set: %s' % dataSetName)
+    dataSet['data'] = {
+        'files': {},
+        'dir': {
+            'raman': [],
+            'intensity': {'filtered': []}
+        }
+    }
+    filteredDirRaman = dataSet['data']['dir']['raman']
+    filteredDirIntensity = dataSet['data']['dir']['intensity']['filtered']
+    for fileName in os.listdir(dataSet['input']):
+        if fileName[-3:] == 'txt':
+            filePath = os.path.join(dataSet['input'], fileName)
+            with open(filePath, 'r') as dataFile:
+                puts("Filtering File: %s" % filePath)
+                filteredDataRaman = []
+                filteredDataIntensity = []
+                i = 0
+                for line in dataFile:
+                    line = line.strip()
+                    dataMatch = dataRe.match(line)
+                    if dataMatch:
+                        ramanShift = float(dataMatch.group('ramanShift'))
+                        if ramanShift >= xmin and ramanShift <= xmax:
+                            filteredDataRaman.append(ramanShift)
+                            intensity = float(dataMatch.group('intensity'))
+                            filteredDataIntensity.append(intensity)
+                            try:
+                                filteredDirRaman[i] = ramanShift
+                                filteredDirIntensity[i].append(intensity)
+                            except IndexError:
+                                filteredDirRaman.append(ramanShift)
+                                filteredDirIntensity.append([intensity])
+                            i += 1
+                if len(filteredDataRaman) > 1:
+                    dataSet['data']['files'][fileName] = {
+                        'raman': numpy.array(filteredDataRaman),
+                        'intensity': {
+                            'original': numpy.array(filteredDataIntensity)
+                        }
+                    }
+                else:
+                    print 'WARNING: Not enough data after filtering %s between %f and %f' % (filePath, args.min, args.max)
+
+def processDataSets(settings, dataSets):
+    putSeparator()
+    dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
+    for dataSetName, dataSet in dataSets.iteritems():
+        filterDataSet(settings['min'], settings['max'], dataSetName, dataSet, dataRe)
+    pprint(dataSets)
+
 def main(argv):
     puts("Welcome to Sab Spectra %s" % (_version))
     with indent(4):
@@ -160,6 +212,8 @@ def main(argv):
                 modifyDataSets(dataDirs)
         elif menuChoice == '2':
             modifySettings(settings)
+        elif menuChoice == '3':
+            processDataSets(settings, dataDirs['active'])
 
     puts('Sab Spectra Quitting')
     exit()
