@@ -180,7 +180,7 @@ def processDataSet(dataSetName, dataSet, settings):
             'intensity': {'filtered': []}
         }
     }
-    outputPath = os.path.abspath(dataSet['output'])
+    outputPath = os.path.join(os.path.abspath(dataSet['output']), dataSetName.replace(' ', '_').lower())
     puts('Creating Output Directory: %s' % (outputPath,))
     try:
         os.makedirs(outputPath)
