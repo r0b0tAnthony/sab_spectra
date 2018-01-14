@@ -180,19 +180,27 @@ def processDataSet(dataSetName, dataSet, settings):
             'intensity': {'filtered': []}
         }
     }
+    outputPath = os.path.abspath(dataSet['output'])
+    puts('Creating Output Directory: %s' % (outputPath,))
+    try:
+        os.makedirs(outputPath)
+    except OSError as e:
+        if e[0] == 17 or e[0] == 183:
+            pass
+        else:
+            print e[0]
+            raise
+    inputPathBasename = os.path.basename(dataSet['input'])
     with indent(4):
         for fileName in os.listdir(dataSet['input']):
             if fileName[-3:] == 'txt':
                 processDataFile(fileName,  os.path.join(dataSet['input'], fileName), dataSet['data'], settings)
         if 'b' in settings['method']:
             puts("Running Method B: Averaging '%s' Data and Then Baselining")
-
             dirAvg = numpy.array(dataSet['data']['dir']['intensity']['filtered']).mean(axis=1)
             dirAvgBaseline = airPLS.airPLS(dirAvg, lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
             dirAvgSubtracted = numpy.subtract(dirAvg, dirAvgBaseline)
-            pprint(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted))
-            exit()
-            dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, args.smooth, args.porder, args.max_it)
+            dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
             dirAvgPath = nextVersionPath(outputPath, dirAvgFileName)
             printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
             print 'Saved Method B to: ', dirAvgPath
