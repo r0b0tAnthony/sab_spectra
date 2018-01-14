@@ -20,3 +20,19 @@ class PathValidator(object):
         if not os.path.isdir(value):
             raise ValidationError(self.message)
         return value
+
+class FloatValidator(object):
+    message = 'Enter a valid float.'
+
+    def __init__(self, message=None):
+        if message is not None:
+            self.message = message
+
+    def __call__(self, value):
+        """
+        Validates that the input is a integer.
+        """
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            raise ValidationError(self.message)

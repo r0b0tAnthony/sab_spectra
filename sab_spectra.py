@@ -42,6 +42,23 @@ def printDataSets(allDataSets):
                 with indent(4):
                     puts("Input: %s" % dataSetSettings['input'])
                     puts("Output: %s" % dataSetSettings['output'])
+def modifySettings(settings):
+    putSeparator()
+    puts('Modify Settings:')
+    with indent(4):
+        invalidSettings = True
+        while invalidSettings:
+            settings['method'] = prompt.query('Output Method:', default=settings['method'], validators=[validators.RegexValidator(regex=re.compile('[a-b]+'))])
+            settings['min'] = prompt.query('Minimum X Value:', default="%f" % settings['min'], validators=[sab_validators.FloatValidator()])
+            settings['max'] = prompt.query('Max X Value:', default="%f" % settings['max'], validators=[sab_validators.FloatValidator()])
+            if settings['min'] > settings['max']:
+                puts(colored.red('Minimum X value can not be larger than Maximum X value!'))
+                continue
+            settings['smooth'] = prompt.query('AirPLS Smoothing:', default=str(settings['smooth']), validators=[validators.IntegerValidator()])
+            settings['max_it'] = prompt.query('AirPLS Max Iterations:', default=str(settings['max_it']), validators=[validators.IntegerValidator()])
+            settings['porder'] = prompt.query('AirPLS POrder:', default=str(settings['porder']), validators=[validators.IntegerValidator()])
+
+            invalidSettings = False
 
 def modifyDataSets(dataSets):
     putSeparator()
@@ -141,6 +158,8 @@ def main(argv):
             dataMenuChoice = dataSetsMenu(dataDirs)
             if dataMenuChoice == '1':
                 modifyDataSets(dataDirs)
+        elif menuChoice == '2':
+            modifySettings(settings)
 
     puts('Sab Spectra Quitting')
     exit()
