@@ -65,9 +65,9 @@ def modifySettings(settings):
 def modifyDataSets(dataSets):
     putSeparator()
     puts("Modify Data Sets:")
-    putSeparator('-', 10)
+    putSeparator('-', 30)
     printDataSets(dataSets)
-    putSeparator('-', 10)
+    putSeparator('-', 30)
     modifyingData = True
     while modifyingData or len(dataSets['active']) < 1:
         contineEditing = True
@@ -121,7 +121,7 @@ def dataSetsMenu(dataSets):
     with indent(4):
         printDataSets(dataSets)
 
-    putSeparator('-', 10)
+    putSeparator('-', 30)
 
     menuOptions = [
         {'selector': '1', 'prompt': 'Modify Data Sets'},
@@ -133,9 +133,17 @@ def dataSetsMenu(dataSets):
 def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetData, settings, fileVersion):
     puts("Processing Data File %s:" % dataSetFilePath)
     fileNameBase = os.path.splitext(dataSetFileName)[0]
-    with indent(4):
+    with indent(4, quote=' >'):
         dataSetData['files'][dataSetFileName] = filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['dir'])
         dataSetFileData = dataSetData['files'][dataSetFileName]
+
+        dataFilteredFileName = "%s_filtered_v%%d.csv" % (fileNameBase)
+        dataFilteredPath = getVersionPath(dataOutputPath, dataFilteredFileName, fileVersion)
+        printData(zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered']), dataFilteredPath)
+        with indent(4, quote='>'):
+            puts('Saved Filtered To: %s' % dataFilteredPath)
+
+        puts('Baselining')
         airData = airPLS.airPLS(dataSetFileData['intensity']['filtered'], lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
         baselinedData = numpy.subtract(dataSetFileData['intensity']['filtered'], airData)
         try:
@@ -150,17 +158,14 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetDat
         dataSetFileData['intensity']['airpls'] = baselinedData
         dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (fileNameBase, settings['smooth'], settings['max_it'], settings['porder'])
         dataPathAir = getVersionPath(dataOutputPath, dataFileNameAir, fileVersion)
-        filteredMatrix = zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered'])
-        dataFilteredFileName = "%s_filtered_v%%d.csv" % (fileNameBase)
-        dataFilteredPath = getVersionPath(dataOutputPath, dataFilteredFileName, fileVersion)
         baselinePath = getVersionPath(dataOutputPath, 'air_baseline_v%d.csv', fileVersion)
         airMatrix = zip(dataSetFileData['raman'],  baselinedData)
-        printData(filteredMatrix, dataFilteredPath)
-        puts('Saved Filtered To: %s' % dataFilteredPath)
-        printData(zip(dataSetFileData['raman'], airData), baselinePath)
-        puts('Saved Baseline To: %s' % baselinePath)
-        printData(airMatrix, dataPathAir)
-        puts('Saved Baseline Subtracted To: %s' % dataPathAir)
+        with indent(4, quote='>'):
+            printData(zip(dataSetFileData['raman'], airData), baselinePath)
+            puts('Saved Baseline To: %s' % baselinePath)
+            printData(airMatrix, dataPathAir)
+            puts('Saved Baseline Subtracted To: %s' % dataPathAir)
+    putSeparator('-', 30)
 
 
 
@@ -224,7 +229,9 @@ def processDataSet(dataSetName, dataSet, settings):
             raise
     inputPathBasename = os.path.basename(dataSet['input'])
     with indent(4):
+        putSeparator('-', 30)
         puts('Created Output Directory: %s' % (outputPath,))
+        putSeparator('-', 30)
         for fileName in os.listdir(dataSet['input']):
             if fileName[-3:] == 'txt':
                 processDataFile(fileName,  os.path.join(dataSet['input'], fileName), outputPath, dataSet['data'], settings, fileVersion)
@@ -238,7 +245,8 @@ def processDataSet(dataSetName, dataSet, settings):
                 dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
                 dirAvgPath = getVersionPath(outputPath, dirAvgFileName, fileVersion)
                 printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
-                puts('Saved Method B to: %s' % dirAvgPath)
+                with indent(4, quote='>'):
+                    puts('Saved Method B to: %s' % dirAvgPath)
             if 'a' in settings['method']:
                 puts('Running Method A: Averaging All Baselined Data and Then Baselining')
                 methodAAvg = numpy.array(dataSet['data']['dir']['intensity']['baselined']).mean(axis=1)
@@ -247,8 +255,9 @@ def processDataSet(dataSetName, dataSet, settings):
                 methodAFileName = "dir_%s_methodA_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
                 methodAPath = getVersionPath(outputPath, methodAFileName, fileVersion)
                 printData(zip(dataSet['data']['dir']['raman'], methodASubtracted), methodAPath)
-                puts('Saved Method A to: %s' % methodAPath)
-    putSeparator('-', 10)
+                with indent(4, quote='>'):
+                    puts('Saved Method A to: %s' % methodAPath)
+    putSeparator('-', 20)
 
 def processDataSets(settings, dataSets):
     putSeparator()
