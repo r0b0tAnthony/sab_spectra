@@ -132,19 +132,26 @@ def dataSetsMenu(dataSets):
 
 def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetData, settings):
     puts("Processing Data File %s:" % dataSetFilePath)
+    fileNameBase = os.path.splitext(dataSetFileName)[0]
     with indent(4):
         dataSetData['files'][dataSetFileName] = filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['dir'])
         dataSetFileData = dataSetData['files'][dataSetFileName]
         airData = airPLS.airPLS(dataSetFileData['intensity']['filtered'], lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
         subtractedData = numpy.subtract(dataSetFileData['intensity']['filtered'], airData)
         dataSetFileData['intensity']['airpls'] = subtractedData
-        dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (os.path.splitext(dataSetFileName)[0], settings['smooth'], settings['max_it'], settings['porder'])
+        dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (fileNameBase, settings['smooth'], settings['max_it'], settings['porder'])
         dataPathAir = nextVersionPath(dataOutputPath, dataFileNameAir)
         filteredMatrix = zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered'])
+        dataFilteredFileName = "%s_filtered_v%%d.csv" % (fileNameBase)
+        dataFilteredPath = nextVersionPath(dataOutputPath, dataFilteredFileName)
+        baselinePath = os.path.join(dataOutputPath, 'air_baseline.csv')
         airMatrix = zip(dataSetFileData['raman'], subtractedData)
-        printData(zip(dataSetFileData['raman'], airData), os.path.join(dataOutputPath, 'air_baseline.csv'))
-        printData(originalMatrix, os.path.join(outputPath, dataFileName))
+        printData(filteredMatrix, dataFilteredPath)
+        puts('Saved Filtered To: %s' % dataFilteredPath)
+        printData(zip(dataSetFileData['raman'], airData), baselinePath)
+        puts('Saved Baseline To: %s' % baselinePath)
         printData(airMatrix, dataPathAir)
+        puts('Saved Baseline Subtracted To: %s' % dataPathAir)
 
 
 
