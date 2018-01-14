@@ -214,7 +214,6 @@ def processDataSet(dataSetName, dataSet, settings):
     outputPathBaseName = "%s_v%%d" % dataSetName.replace(' ', '_').lower()
     fileVersion = nextVersion(os.path.abspath(dataSet['output']), outputPathBaseName)
     outputPath = getVersionPath(os.path.abspath(dataSet['output']), outputPathBaseName, fileVersion)
-    puts('Creating Output Directory: %s' % (outputPath,))
     try:
         os.makedirs(outputPath)
     except OSError as e:
@@ -225,6 +224,7 @@ def processDataSet(dataSetName, dataSet, settings):
             raise
     inputPathBasename = os.path.basename(dataSet['input'])
     with indent(4):
+        puts('Created Output Directory: %s' % (outputPath,))
         for fileName in os.listdir(dataSet['input']):
             if fileName[-3:] == 'txt':
                 processDataFile(fileName,  os.path.join(dataSet['input'], fileName), outputPath, dataSet['data'], settings, fileVersion)
