@@ -131,20 +131,17 @@ def dataSetsMenu(dataSets):
     return prompt.options('Data Sets Menu:', menuOptions, default='1')
 
 def processDataFile(dataSetFileName, dataSetFilePath, dataSetData, settings):
+    puts("Processing Data File %s:" % dataSetFilePath)
     dataSetData['files'][dataSetFileName] = {'raman': [], 'intensity': {}}
-    print dataSetFileName
-    print dataSetFilePath
-    pprint(dataSetData)
-    pprint(settings)
-    dataSetData['files'][dataSetFileName] = filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['dir'])
-    pprint(dataSetData['files'][dataSetFileName])
+    with indent(4):
+        dataSetData['files'][dataSetFileName] = filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['dir'])
 
 def filterDataFile(xmin, xmax, dataSetFilePath, dirData):
     global dataRe
     filteredDirRaman = dirData['raman']
     filteredDirIntensity = dirData['intensity']['filtered']
     with open(dataSetFilePath, 'r') as dataFile:
-        puts("Filtering File: %s" % dataSetFilePath)
+        puts('Filtering')
         filteredDataRaman = []
         filteredDataIntensity = []
         i = 0
