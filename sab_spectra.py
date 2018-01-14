@@ -130,11 +130,24 @@ def dataSetsMenu(dataSets):
 
     return prompt.options('Data Sets Menu:', menuOptions, default='1')
 
-def processDataFile(dataSetFileName, dataSetFilePath, dataSetData, settings):
+def processDataFile(dataSetFileName, dataSetFilePath, dataOutPath, dataSetData, settings):
     puts("Processing Data File %s:" % dataSetFilePath)
-    dataSetData['files'][dataSetFileName] = {'raman': [], 'intensity': {}}
     with indent(4):
         dataSetData['files'][dataSetFileName] = filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['dir'])
+        dataSetFileData = dataSetData['files'][dataSetFileName]
+        airData = airPLS.airPLS(dataSetFileData['intensity']['filtered'], lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
+        subtractedData = numpy.subtract(dataSetFileData['intensity']['filtered'], airData)
+        dataSetFileData['intensity']['airpls'] = subtractedData
+        dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (os.path.splitext(dataSetFileName)[0], settings['smooth'], settings['max_it'], settings['porder'])
+        dataPathAir = nextVersionPath(dataOutPath, dataFileNameAir)
+        filteredMatrix = zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered'])
+        airMatrix = zip(dataSetFileData['raman'], subtractedData)
+        printData(zip(dataSetFileData['raman'], airData), os.path.join(outputPath, 'air_baseline.csv'))
+        printData(originalMatrix, os.path.join(outputPath, dataFileName))
+        printData(airMatrix, dataPathAir)
+
+
+
 
 def filterDataFile(xmin, xmax, dataSetFilePath, dirData):
     global dataRe
@@ -194,7 +207,7 @@ def processDataSet(dataSetName, dataSet, settings):
     with indent(4):
         for fileName in os.listdir(dataSet['input']):
             if fileName[-3:] == 'txt':
-                processDataFile(fileName,  os.path.join(dataSet['input'], fileName), dataSet['data'], settings)
+                processDataFile(fileName,  os.path.join(dataSet['input'], fileName), outputPath, dataSet['data'], settings)
 
         if 'b' in settings['method'] and len(dataSet['data']['dir']['raman']) > 0:
             puts("Running Method B: Averaging '%s' Data and Then Baselining")
