@@ -7,6 +7,8 @@ from clint.textui import prompt, puts, colored, validators, indent
 from sab_clint import validators as sab_validators
 _version = '1.0'
 
+dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
+
 def nextVersionPath(root_path, file_format, version=1):
     version_path = getVersionPath(root_path, file_format, version)
     while os.path.exists(version_path):
@@ -128,58 +130,69 @@ def dataSetsMenu(dataSets):
 
     return prompt.options('Data Sets Menu:', menuOptions, default='1')
 
-def filterDataSet(xmin, xmax, dataSetName, dataSet, dataRe):
-    puts('Filtering Data Set: %s' % dataSetName)
-    with indent(4):
-        dataSet['data'] = {
-            'files': {},
-            'dir': {
-                'raman': [],
-                'intensity': {'filtered': []}
-            }
+def processDataFile(dataSetFileName, dataSetFilePath, dataSetData, settings):
+    dataSetData['files'][dataSetFileName] = {'raman': [], 'intensity': {}}
+    print dataSetFileName
+    print dataSetFilePath
+    pprint(dataSetData)
+    pprint(settings)
+    #filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['files'][dataSetFileName], dataSetData['dir'])
+
+def processDataSet(dataSetName, dataSet, settings):
+    puts('Processing Data Set: %s' % dataSetName)
+    dataSet['data'] = {
+        'files': {},
+        'dir': {
+            'raman': [],
+            'intensity': {'filtered': []}
         }
-        filteredDirRaman = dataSet['data']['dir']['raman']
-        filteredDirIntensity = dataSet['data']['dir']['intensity']['filtered']
+    }
+    with indent(4):
         for fileName in os.listdir(dataSet['input']):
-            if fileName[-3:] == 'txt':
-                filePath = os.path.join(dataSet['input'], fileName)
-                with open(filePath, 'r') as dataFile:
-                    puts("Filtering File: %s" % filePath)
-                    filteredDataRaman = []
-                    filteredDataIntensity = []
-                    i = 0
-                    for line in dataFile:
-                        line = line.strip()
-                        dataMatch = dataRe.match(line)
-                        if dataMatch:
-                            ramanShift = float(dataMatch.group('ramanShift'))
-                            if ramanShift >= xmin and ramanShift <= xmax:
-                                filteredDataRaman.append(ramanShift)
-                                intensity = float(dataMatch.group('intensity'))
-                                filteredDataIntensity.append(intensity)
-                                try:
-                                    filteredDirRaman[i] = ramanShift
-                                    filteredDirIntensity[i].append(intensity)
-                                except IndexError:
-                                    filteredDirRaman.append(ramanShift)
-                                    filteredDirIntensity.append([intensity])
-                                i += 1
-                    if len(filteredDataRaman) > 1:
-                        dataSet['data']['files'][fileName] = {
-                            'raman': numpy.array(filteredDataRaman),
-                            'intensity': {
-                                'original': numpy.array(filteredDataIntensity)
-                            }
-                        }
-                    else:
-                        puts(colored.yellow('WARNING: Not enough data after filtering %s between %f and %f' % (filePath, xmin, xmax)))
+            processDataFile(fileName,  os.path.join(dataSet['input'], fileName), dataSet['data'], settings)
     putSeparator('-', 10)
+
+def filterDataFile(xmin, xmax, dataSetFilePath, fileData, dirData):
+    global dataRe
+    filteredDirRaman = dataSet['data']['dir']['raman']
+    filteredDirIntensity = dataSet['data']['dir']['intensity']['filtered']
+    for fileName in os.listdir(dataSet['input']):
+        if fileName[-3:] == 'txt':
+            with open(filePath, 'r') as dataFile:
+                puts("Filtering File: %s" % filePath)
+                filteredDataRaman = []
+                filteredDataIntensity = []
+                i = 0
+                for line in dataFile:
+                    line = line.strip()
+                    dataMatch = dataRe.match(line)
+                    if dataMatch:
+                        ramanShift = float(dataMatch.group('ramanShift'))
+                        if ramanShift >= xmin and ramanShift <= xmax:
+                            filteredDataRaman.append(ramanShift)
+                            intensity = float(dataMatch.group('intensity'))
+                            filteredDataIntensity.append(intensity)
+                            try:
+                                filteredDirRaman[i] = ramanShift
+                                filteredDirIntensity[i].append(intensity)
+                            except IndexError:
+                                filteredDirRaman.append(ramanShift)
+                                filteredDirIntensity.append([intensity])
+                            i += 1
+                if len(filteredDataRaman) > 1:
+                    dataSet['data']['files'][fileName] = {
+                        'raman': numpy.array(filteredDataRaman),
+                        'intensity': {
+                            'original': numpy.array(filteredDataIntensity)
+                        }
+                    }
+                else:
+                    puts(colored.yellow('WARNING: Not enough data after filtering %s between %f and %f' % (filePath, xmin, xmax)))
 
 def processDataSets(settings, dataSets):
     putSeparator()
-    dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
     for dataSetName, dataSet in dataSets.iteritems():
-        filterDataSet(settings['min'], settings['max'], dataSetName, dataSet, dataRe)
+        processDataSet(dataSetName, dataSet, settings)
     pprint(dataSets)
 
 def main(argv):
