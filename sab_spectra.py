@@ -141,7 +141,6 @@ def main(argv):
             dataMenuChoice = dataSetsMenu(dataDirs)
             print dataMenuChoice
             if dataMenuChoice == '1':
-                print "Gonna Modify Data Sets"
                 modifyDataSets(dataDirs)
 
     puts('Sab Spectra Quitting')
