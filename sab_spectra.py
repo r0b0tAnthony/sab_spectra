@@ -137,15 +137,24 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetDat
         dataSetData['files'][dataSetFileName] = filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['dir'])
         dataSetFileData = dataSetData['files'][dataSetFileName]
         airData = airPLS.airPLS(dataSetFileData['intensity']['filtered'], lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
-        subtractedData = numpy.subtract(dataSetFileData['intensity']['filtered'], airData)
-        dataSetFileData['intensity']['airpls'] = subtractedData
+        baselinedData = numpy.subtract(dataSetFileData['intensity']['filtered'], airData)
+        try:
+            for i,value in enumerate(baselinedData):
+                try:
+                    dataSetData['dir']['intensity']['baselined'][i].append(value)
+                except IndexError:
+                    dataSetData['dir']['intensity']['baselined'].append([value])
+        except KeyError:
+            pass
+
+        dataSetFileData['intensity']['airpls'] = baselinedData
         dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (fileNameBase, settings['smooth'], settings['max_it'], settings['porder'])
         dataPathAir = getVersionPath(dataOutputPath, dataFileNameAir, fileVersion)
         filteredMatrix = zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered'])
         dataFilteredFileName = "%s_filtered_v%%d.csv" % (fileNameBase)
         dataFilteredPath = getVersionPath(dataOutputPath, dataFilteredFileName, fileVersion)
         baselinePath = getVersionPath(dataOutputPath, 'air_baseline_v%d.csv', fileVersion)
-        airMatrix = zip(dataSetFileData['raman'], subtractedData)
+        airMatrix = zip(dataSetFileData['raman'],  baselinedData)
         printData(filteredMatrix, dataFilteredPath)
         puts('Saved Filtered To: %s' % dataFilteredPath)
         printData(zip(dataSetFileData['raman'], airData), baselinePath)
@@ -200,6 +209,8 @@ def processDataSet(dataSetName, dataSet, settings):
             'intensity': {'filtered': []}
         }
     }
+    if 'a' in settings['method']:
+        dataSet['data']['dir']['intensity']['baselined'] = []
     outputPathBaseName = "%s_v%%d" % dataSetName.replace(' ', '_').lower()
     fileVersion = nextVersion(os.path.abspath(dataSet['output']), outputPathBaseName)
     outputPath = getVersionPath(os.path.abspath(dataSet['output']), outputPathBaseName, fileVersion)
@@ -218,15 +229,25 @@ def processDataSet(dataSetName, dataSet, settings):
             if fileName[-3:] == 'txt':
                 processDataFile(fileName,  os.path.join(dataSet['input'], fileName), outputPath, dataSet['data'], settings, fileVersion)
 
-        if 'b' in settings['method'] and len(dataSet['data']['dir']['raman']) > 0:
-            puts("Running Method B: Averaging '%s' Data and Then Baselining" % dataSetName)
-            dirAvg = numpy.array(dataSet['data']['dir']['intensity']['filtered']).mean(axis=1)
-            dirAvgBaseline = airPLS.airPLS(dirAvg, lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
-            dirAvgSubtracted = numpy.subtract(dirAvg, dirAvgBaseline)
-            dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
-            dirAvgPath = getVersionPath(outputPath, dirAvgFileName, fileVersion)
-            printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
-            print 'Saved Method B to: ', dirAvgPath
+        if len(dataSet['data']['dir']['raman']) > 0:
+            if 'b' in settings['method']:
+                puts("Running Method B: Averaging All Data and Then Baselining")
+                dirAvg = numpy.array(dataSet['data']['dir']['intensity']['filtered']).mean(axis=1)
+                dirAvgBaseline = airPLS.airPLS(dirAvg, lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
+                dirAvgSubtracted = numpy.subtract(dirAvg, dirAvgBaseline)
+                dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
+                dirAvgPath = getVersionPath(outputPath, dirAvgFileName, fileVersion)
+                printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
+                puts('Saved Method B to: %s' % dirAvgPath)
+            if 'a' in settings['method']:
+                puts('Running Method A: Averaging All Baselined Data and Then Baselining')
+                methodAAvg = numpy.array(dataSet['data']['dir']['intensity']['baselined']).mean(axis=1)
+                methodABaseline = airPLS.airPLS(methodAAvg, lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
+                methodASubtracted = numpy.subtract(methodAAvg, methodABaseline)
+                methodAFileName = "dir_%s_methodA_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
+                methodAPath = getVersionPath(outputPath, methodAFileName, fileVersion)
+                printData(zip(dataSet['data']['dir']['raman'], methodASubtracted), methodAPath)
+                puts('Saved Method A to: %s' % methodAPath)
     putSeparator('-', 10)
 
 def processDataSets(settings, dataSets):
