@@ -136,7 +136,43 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataSetData, settings):
     print dataSetFilePath
     pprint(dataSetData)
     pprint(settings)
-    #filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['files'][dataSetFileName], dataSetData['dir'])
+    dataSetData['files'][dataSetFileName] = filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['dir'])
+    pprint(dataSetData['files'][dataSetFileName])
+
+def filterDataFile(xmin, xmax, dataSetFilePath, dirData):
+    global dataRe
+    filteredDirRaman = dirData['raman']
+    filteredDirIntensity = dirData['intensity']['filtered']
+    with open(dataSetFilePath, 'r') as dataFile:
+        puts("Filtering File: %s" % dataSetFilePath)
+        filteredDataRaman = []
+        filteredDataIntensity = []
+        i = 0
+        for line in dataFile:
+            line = line.strip()
+            dataMatch = dataRe.match(line)
+            if dataMatch:
+                ramanShift = float(dataMatch.group('ramanShift'))
+                if ramanShift >= xmin and ramanShift <= xmax:
+                    filteredDataRaman.append(ramanShift)
+                    intensity = float(dataMatch.group('intensity'))
+                    filteredDataIntensity.append(intensity)
+                    try:
+                        filteredDirRaman[i] = ramanShift
+                        filteredDirIntensity[i].append(intensity)
+                    except IndexError:
+                        filteredDirRaman.append(ramanShift)
+                        filteredDirIntensity.append([intensity])
+                    i += 1
+        if len(filteredDataRaman) > 1:
+            return {
+                'raman': numpy.array(filteredDataRaman),
+                'intensity': {
+                    'filtered': numpy.array(filteredDataIntensity)
+                }
+            }
+        else:
+            puts(colored.yellow('WARNING: Not enough data after filtering %s between %f and %f' % (filePath, xmin, xmax)))
 
 def processDataSet(dataSetName, dataSet, settings):
     puts('Processing Data Set: %s' % dataSetName)
@@ -151,43 +187,20 @@ def processDataSet(dataSetName, dataSet, settings):
         for fileName in os.listdir(dataSet['input']):
             if fileName[-3:] == 'txt':
                 processDataFile(fileName,  os.path.join(dataSet['input'], fileName), dataSet['data'], settings)
-    putSeparator('-', 10)
+        if 'b' in settings['method']:
+            puts("Running Method B: Averaging '%s' Data and Then Baselining")
 
-def filterDataFile(xmin, xmax, dataSetFilePath, fileData, dirData):
-    global dataRe
-    filteredDirRaman = dataSet['data']['dir']['raman']
-    filteredDirIntensity = dataSet['data']['dir']['intensity']['filtered']
-    for fileName in os.listdir(dataSet['input']):
-            with open(dataSetFilePath, 'r') as dataFile:
-                puts("Filtering File: %s" % filePath)
-                filteredDataRaman = []
-                filteredDataIntensity = []
-                i = 0
-                for line in dataFile:
-                    line = line.strip()
-                    dataMatch = dataRe.match(line)
-                    if dataMatch:
-                        ramanShift = float(dataMatch.group('ramanShift'))
-                        if ramanShift >= xmin and ramanShift <= xmax:
-                            filteredDataRaman.append(ramanShift)
-                            intensity = float(dataMatch.group('intensity'))
-                            filteredDataIntensity.append(intensity)
-                            try:
-                                filteredDirRaman[i] = ramanShift
-                                filteredDirIntensity[i].append(intensity)
-                            except IndexError:
-                                filteredDirRaman.append(ramanShift)
-                                filteredDirIntensity.append([intensity])
-                            i += 1
-                if len(filteredDataRaman) > 1:
-                    dataSet['data']['files'][fileName] = {
-                        'raman': numpy.array(filteredDataRaman),
-                        'intensity': {
-                            'original': numpy.array(filteredDataIntensity)
-                        }
-                    }
-                else:
-                    puts(colored.yellow('WARNING: Not enough data after filtering %s between %f and %f' % (filePath, xmin, xmax)))
+            dirAvg = numpy.array(dataSet['data']['dir']['intensity']['filtered']).mean(axis=1)
+            dirAvgBaseline = airPLS.airPLS(dirAvg, lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
+            dirAvgSubtracted = numpy.subtract(dirAvg, dirAvgBaseline)
+            pprint(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted))
+            exit()
+            dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, args.smooth, args.porder, args.max_it)
+            dirAvgPath = nextVersionPath(outputPath, dirAvgFileName)
+            printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
+            print 'Saved Method B to: ', dirAvgPath
+            exit()
+    putSeparator('-', 10)
 
 def processDataSets(settings, dataSets):
     putSeparator()
