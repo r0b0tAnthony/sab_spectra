@@ -9,12 +9,12 @@ _version = '1.0'
 
 dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
 
-def nextVersionPath(root_path, file_format, version=1):
+def nextVersion(root_path, file_format, version=1):
     version_path = getVersionPath(root_path, file_format, version)
     while os.path.exists(version_path):
         version += 1
         version_path = getVersionPath(root_path, file_format, version)
-    return version_path
+    return version
 
 def getVersionPath(root_path, file_format, version):
     return os.path.join(root_path, file_format % (version))
@@ -130,7 +130,7 @@ def dataSetsMenu(dataSets):
 
     return prompt.options('Data Sets Menu:', menuOptions, default='1')
 
-def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetData, settings):
+def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetData, settings, fileVersion):
     puts("Processing Data File %s:" % dataSetFilePath)
     fileNameBase = os.path.splitext(dataSetFileName)[0]
     with indent(4):
@@ -140,11 +140,11 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetDat
         subtractedData = numpy.subtract(dataSetFileData['intensity']['filtered'], airData)
         dataSetFileData['intensity']['airpls'] = subtractedData
         dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (fileNameBase, settings['smooth'], settings['max_it'], settings['porder'])
-        dataPathAir = nextVersionPath(dataOutputPath, dataFileNameAir)
+        dataPathAir = getVersionPath(dataOutputPath, dataFileNameAir, fileVersion)
         filteredMatrix = zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered'])
         dataFilteredFileName = "%s_filtered_v%%d.csv" % (fileNameBase)
-        dataFilteredPath = nextVersionPath(dataOutputPath, dataFilteredFileName)
-        baselinePath = os.path.join(dataOutputPath, 'air_baseline.csv')
+        dataFilteredPath = getVersionPath(dataOutputPath, dataFilteredFileName, fileVersion)
+        baselinePath = getVersionPath(dataOutputPath, 'air_baseline_v%d.csv', fileVersion)
         airMatrix = zip(dataSetFileData['raman'], subtractedData)
         printData(filteredMatrix, dataFilteredPath)
         puts('Saved Filtered To: %s' % dataFilteredPath)
@@ -200,7 +200,9 @@ def processDataSet(dataSetName, dataSet, settings):
             'intensity': {'filtered': []}
         }
     }
-    outputPath = os.path.join(os.path.abspath(dataSet['output']), dataSetName.replace(' ', '_').lower())
+    outputPathBaseName = "%s_v%%d" % dataSetName.replace(' ', '_').lower()
+    fileVersion = nextVersion(os.path.abspath(dataSet['output']), outputPathBaseName)
+    outputPath = getVersionPath(os.path.abspath(dataSet['output']), outputPathBaseName, fileVersion)
     puts('Creating Output Directory: %s' % (outputPath,))
     try:
         os.makedirs(outputPath)
@@ -214,7 +216,7 @@ def processDataSet(dataSetName, dataSet, settings):
     with indent(4):
         for fileName in os.listdir(dataSet['input']):
             if fileName[-3:] == 'txt':
-                processDataFile(fileName,  os.path.join(dataSet['input'], fileName), outputPath, dataSet['data'], settings)
+                processDataFile(fileName,  os.path.join(dataSet['input'], fileName), outputPath, dataSet['data'], settings, fileVersion)
 
         if 'b' in settings['method'] and len(dataSet['data']['dir']['raman']) > 0:
             puts("Running Method B: Averaging '%s' Data and Then Baselining")
@@ -222,7 +224,7 @@ def processDataSet(dataSetName, dataSet, settings):
             dirAvgBaseline = airPLS.airPLS(dirAvg, lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
             dirAvgSubtracted = numpy.subtract(dirAvg, dirAvgBaseline)
             dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
-            dirAvgPath = nextVersionPath(outputPath, dirAvgFileName)
+            dirAvgPath = getVersionPath(outputPath, dirAvgFileName, fileVersion)
             printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
             print 'Saved Method B to: ', dirAvgPath
             exit()
