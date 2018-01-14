@@ -130,7 +130,7 @@ def dataSetsMenu(dataSets):
 
     return prompt.options('Data Sets Menu:', menuOptions, default='1')
 
-def processDataFile(dataSetFileName, dataSetFilePath, dataOutPath, dataSetData, settings):
+def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetData, settings):
     puts("Processing Data File %s:" % dataSetFilePath)
     with indent(4):
         dataSetData['files'][dataSetFileName] = filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['dir'])
@@ -139,10 +139,10 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutPath, dataSetData, 
         subtractedData = numpy.subtract(dataSetFileData['intensity']['filtered'], airData)
         dataSetFileData['intensity']['airpls'] = subtractedData
         dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (os.path.splitext(dataSetFileName)[0], settings['smooth'], settings['max_it'], settings['porder'])
-        dataPathAir = nextVersionPath(dataOutPath, dataFileNameAir)
+        dataPathAir = nextVersionPath(dataOutputPath, dataFileNameAir)
         filteredMatrix = zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered'])
         airMatrix = zip(dataSetFileData['raman'], subtractedData)
-        printData(zip(dataSetFileData['raman'], airData), os.path.join(outputPath, 'air_baseline.csv'))
+        printData(zip(dataSetFileData['raman'], airData), os.path.join(dataOutputPath, 'air_baseline.csv'))
         printData(originalMatrix, os.path.join(outputPath, dataFileName))
         printData(airMatrix, dataPathAir)
 
