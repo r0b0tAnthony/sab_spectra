@@ -233,7 +233,6 @@ def processDataSets(settings, dataSets):
     putSeparator()
     for dataSetName, dataSet in dataSets.iteritems():
         processDataSet(dataSetName, dataSet, settings)
-    pprint(dataSets)
 
 def main(argv):
     puts("Welcome to Sab Spectra %s" % (_version))
