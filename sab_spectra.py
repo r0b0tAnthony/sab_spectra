@@ -195,7 +195,8 @@ def processDataSet(dataSetName, dataSet, settings):
         for fileName in os.listdir(dataSet['input']):
             if fileName[-3:] == 'txt':
                 processDataFile(fileName,  os.path.join(dataSet['input'], fileName), dataSet['data'], settings)
-        if 'b' in settings['method']:
+
+        if 'b' in settings['method'] and len(dataSet['data']['dir']['raman']) > 0:
             puts("Running Method B: Averaging '%s' Data and Then Baselining")
             dirAvg = numpy.array(dataSet['data']['dir']['intensity']['filtered']).mean(axis=1)
             dirAvgBaseline = airPLS.airPLS(dirAvg, lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
