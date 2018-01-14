@@ -12,7 +12,11 @@ class PathValidator(object):
         """
         Validates that the input is a valid directory.
         """
-        print os.path.normpath(value)
+        value = os.path.normpath(value)
+        if os.name == 'posix':
+            value = value.replace("\\", '')
+        elif os.name == 'nt':
+            value = value.strip(r'"')
         if not os.path.isdir(value):
             raise ValidationError(self.message)
         return value

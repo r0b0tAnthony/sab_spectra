@@ -68,7 +68,7 @@ def modifyDataSets(dataSets):
                     defaultInput = ''
                     defaultOutput = ''
             dataInputDir = prompt.query("Data Input Directory:", default=defaultInput, validators=[sab_validators.PathValidator()])
-            dataOutputDir = prompt.query("Data Output Directory:", validators=[validators.PathValidator()], default=defaultOutput)
+            dataOutputDir = prompt.query("Data Output Directory:", validators=[sab_validators.PathValidator()], default=defaultOutput)
             dataState = 'active' if prompt.yn("Active:") else 'inactive'
 
             dataSets['active'].pop(dataName, None)
