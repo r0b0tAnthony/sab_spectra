@@ -227,7 +227,6 @@ def processDataSet(dataSetName, dataSet, settings):
             dirAvgPath = getVersionPath(outputPath, dirAvgFileName, fileVersion)
             printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
             print 'Saved Method B to: ', dirAvgPath
-            exit()
     putSeparator('-', 10)
 
 def processDataSets(settings, dataSets):
