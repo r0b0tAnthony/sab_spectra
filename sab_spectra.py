@@ -139,7 +139,6 @@ def main(argv):
 
         if menuChoice == '1':
             dataMenuChoice = dataSetsMenu(dataDirs)
-            print dataMenuChoice
             if dataMenuChoice == '1':
                 modifyDataSets(dataDirs)
 
