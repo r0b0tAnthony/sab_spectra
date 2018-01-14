@@ -149,7 +149,8 @@ def processDataSet(dataSetName, dataSet, settings):
     }
     with indent(4):
         for fileName in os.listdir(dataSet['input']):
-            processDataFile(fileName,  os.path.join(dataSet['input'], fileName), dataSet['data'], settings)
+            if fileName[-3:] == 'txt':
+                processDataFile(fileName,  os.path.join(dataSet['input'], fileName), dataSet['data'], settings)
     putSeparator('-', 10)
 
 def filterDataFile(xmin, xmax, dataSetFilePath, fileData, dirData):
@@ -157,8 +158,7 @@ def filterDataFile(xmin, xmax, dataSetFilePath, fileData, dirData):
     filteredDirRaman = dataSet['data']['dir']['raman']
     filteredDirIntensity = dataSet['data']['dir']['intensity']['filtered']
     for fileName in os.listdir(dataSet['input']):
-        if fileName[-3:] == 'txt':
-            with open(filePath, 'r') as dataFile:
+            with open(dataSetFilePath, 'r') as dataFile:
                 puts("Filtering File: %s" % filePath)
                 filteredDataRaman = []
                 filteredDataIntensity = []
