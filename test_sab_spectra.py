@@ -8,20 +8,27 @@ class SabSpectraTestCase(unittest.TestCase):
         absPath = os.path.abspath(os.path.curdir)
         testBaseName = "test_sub_folder_v%d"
         firstFolder = os.path.join(absPath, testBaseName % (1,))
+        try:
+            os.rmdir(firstFolder)
+        except OSError:
+            pass
         print "Testing Path is Current Version: %s" % firstFolder
         version = sab_spectra.nextVersion(absPath, testBaseName)
         self.assertEqual(version, 1)
 
-    def test_nextVersion_existingFolder(self):
+    def test_nextVersion_existingFolders(self):
         absPath = os.path.abspath(os.path.curdir)
         testBaseName = "test_sub_folder_v%d"
-        firstFolder = os.path.join(absPath, testBaseName % (1,))
-        print "Creating Folder: %s" % firstFolder
-        os.makedirs(firstFolder)
-        version = sab_spectra.nextVersion(absPath, testBaseName)
-        self.assertEqual(version, 2)
-        os.rmdir(firstFolder)
-        print "Deleted Folder: %s" % firstFolder
+        for i in range(1, 5):
+            versionFolder = os.path.join(absPath, testBaseName % (i,))
+            print "Creating Folder: %s" % versionFolder
+            os.makedirs(versionFolder)
+        nextVersion = sab_spectra.nextVersion(absPath, testBaseName)
+        self.assertEqual(nextVersion, 5)
+        for i in range(1, 5):
+            versionFolder = os.path.join(absPath, testBaseName % (i,))
+            print "Deleted Folder: %s" % versionFolder
+            os.rmdir(versionFolder)
 
 
 
