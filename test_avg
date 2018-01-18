@@ -1,7 +1,0 @@
-import numpy
-
-numarray = numpy.array([[5,2][5,4]])
-
-print nummpy.average(numarray)
-
-print numpy.average(numarray, axis=1)
