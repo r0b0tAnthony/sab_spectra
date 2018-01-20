@@ -29,8 +29,11 @@ class SabSpectraTestCase(unittest.TestCase):
             versionFolder = os.path.join(absPath, testBaseName % (i,))
             print "Deleted Folder: %s" % versionFolder
             os.rmdir(versionFolder)
-
-
+    def test_getVersionPath(self):
+        absPath = os.path.abspath(os.path.curdir)
+        testBaseName = "test_sub_folder_v%d"
+        versionPath = sab_spectra.getVersionPath(absPath, testBaseName, 1)
+        self.assertEqual(os.path.join(absPath, testBaseName % 1), versionPath)
 
 
 if __name__ == '__main__':
