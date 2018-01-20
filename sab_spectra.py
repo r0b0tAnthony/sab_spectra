@@ -179,6 +179,15 @@ def parseDataLine(line):
     else:
         return False
 
+def filterDataLine(xmin, xmax, line):
+    line = line.strip()
+    dataMatch = parseDataLine(line)
+    if dataMatch and dataMatch['ramanShift'] >= xmin and dataMatch['ramanShift'] <= xmax:
+        return dataMatch
+    else:
+        return False
+
+
 def filterDataFile(xmin, xmax, dataSetFilePath, dirData):
     filteredDirRaman = dirData['raman']
     filteredDirIntensity = dirData['intensity']['filtered']
@@ -188,19 +197,17 @@ def filterDataFile(xmin, xmax, dataSetFilePath, dirData):
         filteredDataIntensity = []
         i = 0
         for line in dataFile:
-            line = line.strip()
-            dataMatch = parseDataLine(line)
+            dataMatch = filterDataLine(xmin, xmax, line)
             if dataMatch:
-                if dataMatch['ramanShift'] >= xmin and dataMatch['ramanShift'] <= xmax:
-                    filteredDataRaman.append(dataMatch['ramanShift'])
-                    filteredDataIntensity.append(dataMatch['intensity'])
-                    try:
-                        filteredDirRaman[i] = dataMatch['ramanShift']
-                        filteredDirIntensity[i].append(dataMatch['intensity'])
-                    except IndexError:
-                        filteredDirRaman.append(dataMatch['ramanShift'])
-                        filteredDirIntensity.append([dataMatch['intensity']])
-                    i += 1
+                filteredDataRaman.append(dataMatch['ramanShift'])
+                filteredDataIntensity.append(dataMatch['intensity'])
+                try:
+                    filteredDirRaman[i] = dataMatch['ramanShift']
+                    filteredDirIntensity[i].append(dataMatch['intensity'])
+                except IndexError:
+                    filteredDirRaman.append(dataMatch['ramanShift'])
+                    filteredDirIntensity.append([dataMatch['intensity']])
+                i += 1
         if len(filteredDataRaman) > 1:
             return {
                 'raman': numpy.array(filteredDataRaman),

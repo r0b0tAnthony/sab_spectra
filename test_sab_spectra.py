@@ -60,5 +60,19 @@ class SabSpectraTestCase(unittest.TestCase):
         dataLine = sab_spectra.parseDataLine(rawLine)
         self.assertFalse(dataLine)
 
+    def test_filterDataLine(self):
+        rawLine = '10.203  5.24'
+        dataLine = sab_spectra.filterDataLine(0, 200, rawLine)
+        self.assertEqual({'ramanShift': 10.203, 'intensity': 5.24}, dataLine)
+
+    def test_filterDataLine_invalid(self):
+        rawLine = '215.6  5.24'
+        dataLine = sab_spectra.filterDataLine(0, 200, rawLine)
+        self.assertFalse(dataLine)
+
+        rawLine = '215.6  5.24'
+        dataLine = sab_spectra.filterDataLine(250, 300, rawLine)
+        self.assertFalse(dataLine)
+
 if __name__ == '__main__':
     unittest.main()
