@@ -34,7 +34,31 @@ class SabSpectraTestCase(unittest.TestCase):
         testBaseName = "test_sub_folder_v%d"
         versionPath = sab_spectra.getVersionPath(absPath, testBaseName, 1)
         self.assertEqual(os.path.join(absPath, testBaseName % 1), versionPath)
+    def test_parseDataLine(self):
+        rawLine = '10.203   5.24'
+        dataLine = sab_spectra.parseDataLine(rawLine)
+        self.assertEqual({'ramanShift': 10.203, 'intensity': 5.24}, dataLine)
 
+        rawLine = "10.203\t\t5.24"
+        dataLine = sab_spectra.parseDataLine(rawLine)
+        self.assertEqual({'ramanShift': 10.203, 'intensity': 5.24}, dataLine)
+
+    def test_parseDataLine_invalid(self):
+        rawLine = '10.203.5.6'
+        dataLine = sab_spectra.parseDataLine(rawLine)
+        self.assertFalse(dataLine)
+
+        rawLine = '.56  5.6'
+        dataLine = sab_spectra.parseDataLine(rawLine)
+        self.assertFalse(dataLine)
+
+        rawLine = 'meow  12.63'
+        dataLine = sab_spectra.parseDataLine(rawLine)
+        self.assertFalse(dataLine)
+
+        rawLine ="meow10.203  \t5.24woof"
+        dataLine = sab_spectra.parseDataLine(rawLine)
+        self.assertFalse(dataLine)
 
 if __name__ == '__main__':
     unittest.main()

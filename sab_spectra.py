@@ -168,10 +168,18 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetDat
     putSeparator('-', 30)
 
 
-
+def parseDataLine(line):
+    global dataRe
+    dataMatch = dataRe.match(line)
+    if dataMatch:
+        return {
+            'ramanShift': float(dataMatch.group('ramanShift')),
+            'intensity': float(dataMatch.group('intensity'))
+        }
+    else:
+        return False
 
 def filterDataFile(xmin, xmax, dataSetFilePath, dirData):
-    global dataRe
     filteredDirRaman = dirData['raman']
     filteredDirIntensity = dirData['intensity']['filtered']
     with open(dataSetFilePath, 'r') as dataFile:
@@ -181,19 +189,17 @@ def filterDataFile(xmin, xmax, dataSetFilePath, dirData):
         i = 0
         for line in dataFile:
             line = line.strip()
-            dataMatch = dataRe.match(line)
+            dataMatch = parseDataLine(line)
             if dataMatch:
-                ramanShift = float(dataMatch.group('ramanShift'))
-                if ramanShift >= xmin and ramanShift <= xmax:
-                    filteredDataRaman.append(ramanShift)
-                    intensity = float(dataMatch.group('intensity'))
-                    filteredDataIntensity.append(intensity)
+                if dataMatch['ramanShift'] >= xmin and dataMatch['ramanShift'] <= xmax:
+                    filteredDataRaman.append(dataMatch['ramanShift'])
+                    filteredDataIntensity.append(dataMatch['intensity'])
                     try:
-                        filteredDirRaman[i] = ramanShift
-                        filteredDirIntensity[i].append(intensity)
+                        filteredDirRaman[i] = dataMatch['ramanShift']
+                        filteredDirIntensity[i].append(dataMatch['intensity'])
                     except IndexError:
-                        filteredDirRaman.append(ramanShift)
-                        filteredDirIntensity.append([intensity])
+                        filteredDirRaman.append(dataMatch['ramanShift'])
+                        filteredDirIntensity.append([dataMatch['intensity']])
                     i += 1
         if len(filteredDataRaman) > 1:
             return {
