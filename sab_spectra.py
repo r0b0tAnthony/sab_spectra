@@ -1,4 +1,4 @@
-import argparse, sys, os, re
+import argparse, sys, os, re, copy
 from pprint import pprint
 from airPLS import airPLS
 import numpy
@@ -129,6 +129,10 @@ def dataSetsMenu(dataSets):
     ]
 
     return prompt.options('Data Sets Menu:', menuOptions, default='1')
+def baselineData(data, smooth, porder, max_it):
+    baseline = airPLS.airPLS(data, lambda_=smooth, porder=porder, itermax=max_it)
+    baselinedData = numpy.subtract(data, baseline)
+    return (baselinedData, baseline)
 
 def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetData, settings, fileVersion):
     puts("Processing Data File %s:" % dataSetFilePath)
@@ -144,16 +148,14 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetDat
             puts('Saved Filtered To: %s' % dataFilteredPath)
 
         puts('Baselining')
-        airData = airPLS.airPLS(dataSetFileData['intensity']['filtered'], lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
-        baselinedData = numpy.subtract(dataSetFileData['intensity']['filtered'], airData)
-        try:
-            for i,value in enumerate(baselinedData):
-                try:
-                    dataSetData['dir']['intensity']['baselined'][i].append(value)
-                except IndexError:
-                    dataSetData['dir']['intensity']['baselined'].append([value])
-        except KeyError:
-            pass
+        baselinedData, airData = baselineData(dataSetFileData['intensity']['filtered'], settings['smooth'], settings['porder'], settings['max_it'])
+        for i,value in enumerate(baselinedData):
+            try:
+                dataSetData['dir']['intensity']['baselined'][i].append(value)
+            except IndexError:
+                dataSetData['dir']['intensity']['baselined'].append([value])
+            except KeyError:
+                pass
 
         dataSetFileData['intensity']['airpls'] = baselinedData
         dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (fileNameBase, settings['smooth'], settings['max_it'], settings['porder'])
@@ -253,8 +255,7 @@ def processDataSet(dataSetName, dataSet, settings):
             if 'b' in settings['method']:
                 puts("Running Method B: Averaging All Data and Then Baselining")
                 dirAvg = numpy.array(dataSet['data']['dir']['intensity']['filtered']).mean(axis=1)
-                dirAvgBaseline = airPLS.airPLS(dirAvg, lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
-                dirAvgSubtracted = numpy.subtract(dirAvg, dirAvgBaseline)
+                dirAvgBaseline, dirAvgSubtracted = baselineData(dirAvg, settings['smooth'], settings['porder'], settings['max_it'])
                 dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
                 dirAvgPath = getVersionPath(outputPath, dirAvgFileName, fileVersion)
                 printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
@@ -263,8 +264,7 @@ def processDataSet(dataSetName, dataSet, settings):
             if 'a' in settings['method']:
                 puts('Running Method A: Averaging All Baselined Data and Then Baselining')
                 methodAAvg = numpy.array(dataSet['data']['dir']['intensity']['baselined']).mean(axis=1)
-                methodABaseline = airPLS.airPLS(methodAAvg, lambda_=settings['smooth'], porder=settings['porder'], itermax=settings['max_it'])
-                methodASubtracted = numpy.subtract(methodAAvg, methodABaseline)
+                methodABaseline, methodASubtracted = baselineData(methodAAvg, settings['smooth'], settings['porder'], settings['max_it'])
                 methodAFileName = "dir_%s_methodA_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
                 methodAPath = getVersionPath(outputPath, methodAFileName, fileVersion)
                 printData(zip(dataSet['data']['dir']['raman'], methodASubtracted), methodAPath)

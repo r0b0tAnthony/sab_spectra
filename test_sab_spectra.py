@@ -1,5 +1,7 @@
 import unittest, os
-import sab_spectra
+import sab_spectra, numpy
+from pprint import pprint
+from airPLS import airPLS
 
 class SabSpectraTestCase(unittest.TestCase):
     """Tests for `sab_spectra.py`"""
@@ -73,6 +75,16 @@ class SabSpectraTestCase(unittest.TestCase):
         rawLine = '215.6  5.24'
         dataLine = sab_spectra.filterDataLine(250, 300, rawLine)
         self.assertFalse(dataLine)
+
+    def test_baselineData(self):
+        data = numpy.array([5.6, 3.5, 4.2, 9.5, 200.6, 53.5, 120.32])
+        baseline = airPLS.airPLS(data, lambda_=100, porder=3, itermax=15)
+        baselinedData = numpy.subtract(data, baseline)
+        sabBaselinedData, sabBaseline = sab_spectra.baselineData(data, 100, 3, 15)
+
+        numpy.testing.assert_almost_equal(sabBaselinedData, baselinedData)
+        numpy.testing.assert_almost_equal(sabBaseline, baseline)
+
 
 if __name__ == '__main__':
     unittest.main()
