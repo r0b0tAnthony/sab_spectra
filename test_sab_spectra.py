@@ -85,6 +85,29 @@ class SabSpectraTestCase(unittest.TestCase):
         numpy.testing.assert_almost_equal(sabBaselinedData, baselinedData)
         numpy.testing.assert_almost_equal(sabBaseline, baseline)
 
+    def test_setSettings(self):
+        settings = sab_spectra.setSettings()
+        defaultSettings = {
+            'method': 'b',
+            'min': 0.0,
+            'max': 4000.0,
+            'smooth': 100,
+            'max_it': 15,
+            'porder': 1
+        }
+        self.assertEqual(settings, defaultSettings)
+
+        newSettings = {
+            'method': 'ab',
+            'min': 200.0,
+            'max': 4500.0,
+            'smooth': 300,
+            'max_it': 10,
+            'porder': 3
+        }
+        settings = sab_spectra.setSettings(method='ab', xmin=200.0, xmax=4500.0, smooth=300, max_it=10, porder=3)
+        self.assertEqual(newSettings, settings)
+
 
 if __name__ == '__main__':
     unittest.main()

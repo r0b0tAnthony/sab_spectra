@@ -277,6 +277,21 @@ def processDataSets(settings, dataSets):
     for dataSetName, dataSet in dataSets.iteritems():
         processDataSet(dataSetName, dataSet, settings)
 
+def setSettings(method='b', xmin=0.0, xmax=4000.0, smooth=100, max_it=15, porder=1):
+    if xmin > xmax:
+        raise ValueError("Xmin(%f) Can Not Be Larger than Xmax(%f)" % (xmin, xmax))
+    if 'a' not in method and 'b' not in method:
+        raise ValueError("Invalid methods chosen. Please choose a, b, or a combination thereof.")
+
+    return {
+        'method': method,
+        'min': float(xmin),
+        'max': float(xmax),
+        'smooth': smooth,
+        'max_it': max_it,
+        'porder': porder
+    }
+
 def main(argv):
     puts("Welcome to Sab Spectra %s" % (_version))
     with indent(4):
@@ -284,16 +299,7 @@ def main(argv):
              Sab Spectra takes raman(x) and intensity(y) in CSV txt files separated by tabs and outputs averaged\n
              and baselined data through several methods.
          """)
-
-    defaultSettings = {
-     'max': 4000,
-     'min': 0,
-     'smooth': 100,
-     'max_it': 15,
-     'porder': 1,
-     'method': 'b'
-    }
-    settings = dict(defaultSettings)
+    settings = setSettings()
 
     dataDirs = {'active': {}, 'inactive': {}}
 
