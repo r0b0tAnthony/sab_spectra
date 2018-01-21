@@ -98,7 +98,7 @@ def modifyDataSets(dataSets):
                 'output': dataOutputDir
             }
             #Weirdly clint compares answer against default in order to return boolean
-            modifyingData = not prompt.yn('Continue Modifying Data Sets?', default='n')
+            modifyingData = prompt.yn('Continue Modifying Data Sets?')
 
 def putSeparator(char='=', length=20):
     separator = char * length
