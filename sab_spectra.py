@@ -257,7 +257,7 @@ def processDataSet(dataSetName, dataSet, settings):
                 puts("Running Method B: Averaging All Data and Then Baselining")
                 dirAvg = numpy.array(dataSet['data']['dir']['intensity']['filtered']).mean(axis=1)
                 dirAvgBaseline, dirAvgSubtracted = baselineData(dirAvg, settings['smooth'], settings['porder'], settings['max_it'])
-                dirAvgFileName = "dir_%s_methodB_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
+                dirAvgFileName = "methodB_%s_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
                 dirAvgPath = getVersionPath(outputPath, dirAvgFileName, fileVersion)
                 printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
                 with indent(4, quote='>'):
@@ -266,7 +266,7 @@ def processDataSet(dataSetName, dataSet, settings):
                 puts('Running Method A: Averaging All Baselined Data and Then Baselining')
                 methodAAvg = numpy.array(dataSet['data']['dir']['intensity']['baselined']).mean(axis=1)
                 methodABaseline, methodASubtracted = baselineData(methodAAvg, settings['smooth'], settings['porder'], settings['max_it'])
-                methodAFileName = "dir_%s_methodA_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
+                methodAFileName = "methodA_%s_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
                 methodAPath = getVersionPath(outputPath, methodAFileName, fileVersion)
                 printData(zip(dataSet['data']['dir']['raman'], methodASubtracted), methodAPath)
                 with indent(4, quote='>'):
