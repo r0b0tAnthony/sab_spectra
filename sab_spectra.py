@@ -109,11 +109,12 @@ def mainMenu(totalDataSets, settings):
     menuOptions = [
         {'selector': '1', 'prompt': "Data Sets(Total: %d)" % totalDataSets},
         {'selector': '2', 'prompt': editSettingsPrompt},
-        {'selector': '3', 'prompt': 'Process Data Sets'},
-        {'selector': '4', 'prompt': 'Quit Sab Spectra'}
+        {'selector': '3', 'prompt': 'Reset Settings to Default'},
+        {'selector': '4', 'prompt': 'Process Data Sets'},
+        {'selector': '5', 'prompt': 'Quit Sab Spectra'}
     ]
     putSeparator()
-    return prompt.options('Main Menu:', menuOptions, default='3')
+    return prompt.options('Main Menu:', menuOptions, default='4')
 
 def dataSetsMenu(dataSets):
     putSeparator()
@@ -306,7 +307,7 @@ def main(argv):
     modifyDataSets(dataDirs)
 
     menuChoice = 0
-    while menuChoice != '4':
+    while menuChoice != '5':
         menuChoice = mainMenu(len(dataDirs['active']) + len(dataDirs['inactive']), settings)
 
         if menuChoice == '1':
@@ -316,6 +317,8 @@ def main(argv):
         elif menuChoice == '2':
             modifySettings(settings)
         elif menuChoice == '3':
+            settings = setSettings()
+        elif menuChoice == '4':
             processDataSets(settings, dataDirs['active'])
 
     puts('Sab Spectra Quitting')
