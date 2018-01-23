@@ -1,0 +1,5 @@
+language: python
+install:  pip install -r requirements.txt
+python:
+    - "2.7"
+script: test_sab_spectra.py
