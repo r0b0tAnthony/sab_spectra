@@ -2,7 +2,6 @@ import argparse, sys, os, re, copy
 from pprint import pprint
 from airPLS import airPLS
 import numpy
-from scipy import signal
 from clint.textui import prompt, puts, colored, validators, indent
 from sab_clint import validators as sab_validators
 _version = '1.0'
