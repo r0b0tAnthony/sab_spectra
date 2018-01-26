@@ -119,6 +119,6 @@ class SabSpectraTestCase(unittest.TestCase):
             self.assertEqual(r.readline().strip(), '{:.{prec}f},{:.{prec}f}'.format(outputData[0][0], outputData[0][1], prec=10))
             self.assertEqual(r.readline().strip(), '{:.{prec}f},{:.{prec}f}'.format(outputData[1][0], outputData[1][1], prec=10))
 
-
+        os.remove(outputFile)
 if __name__ == '__main__':
     unittest.main()
