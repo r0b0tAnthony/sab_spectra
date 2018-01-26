@@ -93,7 +93,8 @@ class SabSpectraTestCase(unittest.TestCase):
             'max': 4000.0,
             'smooth': 100,
             'max_it': 15,
-            'porder': 1
+            'porder': 1,
+            'prec': 14
         }
         self.assertEqual(settings, defaultSettings)
 
@@ -103,11 +104,21 @@ class SabSpectraTestCase(unittest.TestCase):
             'max': 4500.0,
             'smooth': 300,
             'max_it': 10,
-            'porder': 3
+            'porder': 3,
+            'prec': 5
         }
-        settings = sab_spectra.setSettings(method='ab', xmin=200.0, xmax=4500.0, smooth=300, max_it=10, porder=3)
+        settings = sab_spectra.setSettings(method='ab', xmin=200.0, xmax=4500.0, smooth=300, max_it=10, porder=3, prec=5)
         self.assertEqual(newSettings, settings)
 
+    def test_printData(self):
+        outputFile = "./test/test_printData.txt"
+        outputData = [(numpy.float64(10.5), numpy.float64(3.5)), (numpy.float64(4.6), numpy.float64(8.9))]
+        sab_spectra.printData(outputData, outputFile, 10)
 
+        with open(outputFile) as r:
+            self.assertEqual(r.readline().strip(), '{:.{prec}f},{:.{prec}f}'.format(outputData[0][0], outputData[0][1], prec=10))
+            self.assertEqual(r.readline().strip(), '{:.{prec}f},{:.{prec}f}'.format(outputData[1][0], outputData[1][1], prec=10))
+
+        os.remove(outputFile)
 if __name__ == '__main__':
     unittest.main()

@@ -2,7 +2,6 @@ import argparse, sys, os, re, copy
 from pprint import pprint
 from airPLS import airPLS
 import numpy
-from scipy import signal
 from clint.textui import prompt, puts, colored, validators, indent
 from sab_clint import validators as sab_validators
 _version = '1.0'
@@ -19,10 +18,10 @@ def nextVersion(root_path, file_format, version=1):
 def getVersionPath(root_path, file_format, version):
     return os.path.join(root_path, file_format % (version))
 
-def printData(outputData, outputPath, format = 'CSV'):
+def printData(outputData, outputPath, precision, format = 'CSV'):
     with open(outputPath, 'w') as dataFile:
         for data in outputData:
-            dataFile.write("%f,%f\n" % data)
+            dataFile.write('{:.{prec}f},{:.{prec}f}\n'.format(data[0],data[1], prec=precision))
 
 def isArgDir(arg):
     if not os.path.isdir(arg):
@@ -59,6 +58,7 @@ def modifySettings(settings):
             settings['smooth'] = prompt.query('AirPLS Smoothing:', default=str(settings['smooth']), validators=[validators.IntegerValidator()])
             settings['max_it'] = prompt.query('AirPLS Max Iterations:', default=str(settings['max_it']), validators=[validators.IntegerValidator()])
             settings['porder'] = prompt.query('AirPLS POrder:', default=str(settings['porder']), validators=[validators.IntegerValidator()])
+            settings['prec'] = prompt.query('Data Output Decimal Precision:', default=str(settings['prec']), validators=[validators.IntegerValidator()])
 
             invalidSettings = False
 
@@ -105,7 +105,7 @@ def putSeparator(char='=', length=20):
     puts("\n%s\n" % separator)
 
 def mainMenu(totalDataSets, settings):
-    editSettingsPrompt = "Edit Settings(Min: %(min)f, Max: %(max)f, Method: %(method)s, Smooth: %(smooth)d, POrder: %(porder)d, Max It: %(max_it)d)" % settings
+    editSettingsPrompt = "Edit Settings(Min: %(min)f, Max: %(max)f, Method: %(method)s, Smooth: %(smooth)d, POrder: %(porder)d, Max It: %(max_it)d, Precision: %(prec)d)" % settings
     menuOptions = [
         {'selector': '1', 'prompt': "Data Sets(Total: %d)" % totalDataSets},
         {'selector': '2', 'prompt': editSettingsPrompt},
@@ -144,7 +144,7 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetDat
 
         dataFilteredFileName = "%s_filtered_v%%d.csv" % (fileNameBase)
         dataFilteredPath = getVersionPath(dataOutputPath, dataFilteredFileName, fileVersion)
-        printData(zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered']), dataFilteredPath)
+        printData(zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered']), dataFilteredPath, settings['prec'])
         with indent(4, quote='>'):
             puts('Saved Filtered To: %s' % dataFilteredPath)
 
@@ -164,9 +164,9 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetDat
         baselinePath = getVersionPath(dataOutputPath, 'air_baseline_v%d.csv', fileVersion)
         airMatrix = zip(dataSetFileData['raman'],  baselinedData)
         with indent(4, quote='>'):
-            printData(zip(dataSetFileData['raman'], airData), baselinePath)
+            printData(zip(dataSetFileData['raman'], airData), baselinePath, settings['prec'])
             puts('Saved Baseline To: %s' % baselinePath)
-            printData(airMatrix, dataPathAir)
+            printData(airMatrix, dataPathAir, settings['prec'])
             puts('Saved Baseline Subtracted To: %s' % dataPathAir)
     putSeparator('-', 30)
 
@@ -176,8 +176,8 @@ def parseDataLine(line):
     dataMatch = dataRe.match(line)
     if dataMatch:
         return {
-            'ramanShift': float(dataMatch.group('ramanShift')),
-            'intensity': float(dataMatch.group('intensity'))
+            'ramanShift': numpy.float64(dataMatch.group('ramanShift')),
+            'intensity': numpy.float64(dataMatch.group('intensity'))
         }
     else:
         return False
@@ -189,7 +189,6 @@ def filterDataLine(xmin, xmax, line):
         return dataMatch
     else:
         return False
-
 
 def filterDataFile(xmin, xmax, dataSetFilePath, dirData):
     filteredDirRaman = dirData['raman']
@@ -259,7 +258,7 @@ def processDataSet(dataSetName, dataSet, settings):
                 dirAvgBaseline, dirAvgSubtracted = baselineData(dirAvg, settings['smooth'], settings['porder'], settings['max_it'])
                 dirAvgFileName = "methodB_%s_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
                 dirAvgPath = getVersionPath(outputPath, dirAvgFileName, fileVersion)
-                printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath)
+                printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath, settings['prec'])
                 with indent(4, quote='>'):
                     puts('Saved Method B to: %s' % dirAvgPath)
             if 'a' in settings['method']:
@@ -268,7 +267,7 @@ def processDataSet(dataSetName, dataSet, settings):
                 methodABaseline, methodASubtracted = baselineData(methodAAvg, settings['smooth'], settings['porder'], settings['max_it'])
                 methodAFileName = "methodA_%s_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
                 methodAPath = getVersionPath(outputPath, methodAFileName, fileVersion)
-                printData(zip(dataSet['data']['dir']['raman'], methodASubtracted), methodAPath)
+                printData(zip(dataSet['data']['dir']['raman'], methodASubtracted), methodAPath, settings['prec'])
                 with indent(4, quote='>'):
                     puts('Saved Method A to: %s' % methodAPath)
     putSeparator('-', 20)
@@ -278,7 +277,7 @@ def processDataSets(settings, dataSets):
     for dataSetName, dataSet in dataSets.iteritems():
         processDataSet(dataSetName, dataSet, settings)
 
-def setSettings(method='b', xmin=0.0, xmax=4000.0, smooth=100, max_it=15, porder=1):
+def setSettings(method='b', xmin=0.0, xmax=4000.0, smooth=100, max_it=15, porder=1, prec=14):
     if xmin > xmax:
         raise ValueError("Xmin(%f) Can Not Be Larger than Xmax(%f)" % (xmin, xmax))
     if 'a' not in method and 'b' not in method:
@@ -290,7 +289,8 @@ def setSettings(method='b', xmin=0.0, xmax=4000.0, smooth=100, max_it=15, porder
         'max': float(xmax),
         'smooth': smooth,
         'max_it': max_it,
-        'porder': porder
+        'porder': porder,
+        'prec': prec
     }
 
 def main(argv):
