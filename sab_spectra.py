@@ -58,6 +58,7 @@ def modifySettings(settings):
             settings['smooth'] = prompt.query('AirPLS Smoothing:', default=str(settings['smooth']), validators=[validators.IntegerValidator()])
             settings['max_it'] = prompt.query('AirPLS Max Iterations:', default=str(settings['max_it']), validators=[validators.IntegerValidator()])
             settings['porder'] = prompt.query('AirPLS POrder:', default=str(settings['porder']), validators=[validators.IntegerValidator()])
+            settings['prec'] = prompt.query('Data Output Decimal Precision:', default=str(settings['prec']), validators=[validators.IntegerValidator()])
 
             invalidSettings = False
 
@@ -104,7 +105,7 @@ def putSeparator(char='=', length=20):
     puts("\n%s\n" % separator)
 
 def mainMenu(totalDataSets, settings):
-    editSettingsPrompt = "Edit Settings(Min: %(min)f, Max: %(max)f, Method: %(method)s, Smooth: %(smooth)d, POrder: %(porder)d, Max It: %(max_it)d)" % settings
+    editSettingsPrompt = "Edit Settings(Min: %(min)f, Max: %(max)f, Method: %(method)s, Smooth: %(smooth)d, POrder: %(porder)d, Max It: %(max_it)d, Precision: %(prec)d)" % settings
     menuOptions = [
         {'selector': '1', 'prompt': "Data Sets(Total: %d)" % totalDataSets},
         {'selector': '2', 'prompt': editSettingsPrompt},
