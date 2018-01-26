@@ -93,7 +93,8 @@ class SabSpectraTestCase(unittest.TestCase):
             'max': 4000.0,
             'smooth': 100,
             'max_it': 15,
-            'porder': 1
+            'porder': 1,
+            'prec': 14
         }
         self.assertEqual(settings, defaultSettings)
 
@@ -103,9 +104,10 @@ class SabSpectraTestCase(unittest.TestCase):
             'max': 4500.0,
             'smooth': 300,
             'max_it': 10,
-            'porder': 3
+            'porder': 3,
+            'prec': 5
         }
-        settings = sab_spectra.setSettings(method='ab', xmin=200.0, xmax=4500.0, smooth=300, max_it=10, porder=3)
+        settings = sab_spectra.setSettings(method='ab', xmin=200.0, xmax=4500.0, smooth=300, max_it=10, porder=3, prec=5)
         self.assertEqual(newSettings, settings)
 
 
