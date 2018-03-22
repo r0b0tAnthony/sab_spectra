@@ -94,7 +94,8 @@ class SabSpectraTestCase(unittest.TestCase):
             'smooth': 100,
             'max_it': 15,
             'porder': 1,
-            'prec': 14
+            'prec': 14,
+            'formats': ['csv']
         }
         self.assertEqual(settings, defaultSettings)
 
@@ -105,20 +106,37 @@ class SabSpectraTestCase(unittest.TestCase):
             'smooth': 300,
             'max_it': 10,
             'porder': 3,
-            'prec': 5
+            'prec': 5,
+            'formats': ['csv', 'txt']
         }
-        settings = sab_spectra.setSettings(method='ab', xmin=200.0, xmax=4500.0, smooth=300, max_it=10, porder=3, prec=5)
+        settings = sab_spectra.setSettings(method='ab', xmin=200.0, xmax=4500.0, smooth=300, max_it=10, porder=3, prec=5, formats=['csv', 'txt'])
         self.assertEqual(newSettings, settings)
 
-    def test_printData(self):
-        outputFile = "./test/test_printData.txt"
+    def test_formatData(self):
+        dataset = [(10.65432299, 200), (3000.000567, 159.6543297654901)]
+        csvFormat = sab_spectra.formatData(dataset, 'csv', 4)
+        self.assertListEqual(['10.6543,200.0000\n', '3000.0006,159.6543\n'], csvFormat)
+
+        txtFormat = sab_spectra.formatData(dataset, 'txt', 4)
+        self.assertListEqual(['10.6543\t200.0000\n', '3000.0006\t159.6543\n'], txtFormat)
+
+        self.assertRaises(ValueError, sab_spectra.formatData, dataset, 'foobar', 4)
+
+    def test_writeData(self):
         outputData = [(numpy.float64(10.5), numpy.float64(3.5)), (numpy.float64(4.6), numpy.float64(8.9))]
-        sab_spectra.printData(outputData, outputFile, 10)
+        expectedOutput = {
+            'csv': ['10.5000,3.5000', '4.6000,8.9000'],
+            'txt': ['10.5000\t3.5000', '4.6000\t8.9000']
+        }
+        for format in expectedOutput.keys():
+            outputFile = "./test/test_printData." + format
+            formattedData = sab_spectra.formatData(outputData, format, 4)
+            sab_spectra.writeData(formattedData, outputFile)
 
-        with open(outputFile) as r:
-            self.assertEqual(r.readline().strip(), '{:.{prec}f},{:.{prec}f}'.format(outputData[0][0], outputData[0][1], prec=10))
-            self.assertEqual(r.readline().strip(), '{:.{prec}f},{:.{prec}f}'.format(outputData[1][0], outputData[1][1], prec=10))
+            with open(outputFile) as r:
+                self.assertEqual(r.readline().strip(), expectedOutput[format][0])
+                self.assertEqual(r.readline().strip(), expectedOutput[format][1])
 
-        os.remove(outputFile)
+            os.remove(outputFile)
 if __name__ == '__main__':
     unittest.main()

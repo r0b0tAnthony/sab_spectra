@@ -8,6 +8,9 @@ _version = '1.0'
 
 dataRe = re.compile('^(?P<ramanShift>\d+\.\d+)\s+(?P<intensity>\d+\.\d+)$')
 
+def getValidFormats():
+    return ['csv', 'txt']
+
 def nextVersion(root_path, file_format, version=1):
     version_path = getVersionPath(root_path, file_format, version)
     while os.path.exists(version_path):
@@ -18,10 +21,19 @@ def nextVersion(root_path, file_format, version=1):
 def getVersionPath(root_path, file_format, version):
     return os.path.join(root_path, file_format % (version))
 
-def printData(outputData, outputPath, precision, format = 'CSV'):
+def writeData(outputData, outputPath):
     with open(outputPath, 'w') as dataFile:
         for data in outputData:
-            dataFile.write('{:.{prec}f},{:.{prec}f}\n'.format(data[0],data[1], prec=precision))
+            dataFile.write(data)
+
+def formatData(dataset, format, precision):
+    if format == 'csv':
+        return ["{:.{prec}f},{:.{prec}f}\n".format(data[0],data[1], prec=precision) for data in dataset]
+    elif format == 'txt':
+        return ["{:.{prec}f}\t{:.{prec}f}\n".format(data[0],data[1], prec=precision) for data in dataset]
+    else:
+        raise ValueError("{} is not a valid output format!".format(format))
+
 
 def isArgDir(arg):
     if not os.path.isdir(arg):
@@ -55,6 +67,10 @@ def modifySettings(settings):
             if settings['min'] > settings['max']:
                 puts(colored.red('Minimum X value can not be larger than Maximum X value!'))
                 continue
+            settings['formats'] = prompt.query(
+                'Comma Separated List of Output Formats(Formats: {}):'.format(','.join(getValidFormats())),
+                default=','.join(settings['formats']),
+                validators=[sab_validators.CommaSeparatedValidator(options=getValidFormats())])
             settings['smooth'] = prompt.query('AirPLS Smoothing:', default=str(settings['smooth']), validators=[validators.IntegerValidator()])
             settings['max_it'] = prompt.query('AirPLS Max Iterations:', default=str(settings['max_it']), validators=[validators.IntegerValidator()])
             settings['porder'] = prompt.query('AirPLS POrder:', default=str(settings['porder']), validators=[validators.IntegerValidator()])
@@ -141,13 +157,8 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetDat
     with indent(4, quote=' >'):
         dataSetData['files'][dataSetFileName] = filterDataFile(settings['min'], settings['max'], dataSetFilePath, dataSetData['dir'])
         dataSetFileData = dataSetData['files'][dataSetFileName]
-
-        dataFilteredFileName = "%s_filtered_v%%d.csv" % (fileNameBase)
-        dataFilteredPath = getVersionPath(dataOutputPath, dataFilteredFileName, fileVersion)
-        printData(zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered']), dataFilteredPath, settings['prec'])
-        with indent(4, quote='>'):
-            puts('Saved Filtered To: %s' % dataFilteredPath)
-
+        puts('Data Filtered')
+        dataFiltered = zip(dataSetFileData['raman'], dataSetFileData['intensity']['filtered'])
         puts('Baselining')
         baselinedData, airData = baselineData(dataSetFileData['intensity']['filtered'], settings['smooth'], settings['porder'], settings['max_it'])
         for i,value in enumerate(baselinedData):
@@ -159,15 +170,35 @@ def processDataFile(dataSetFileName, dataSetFilePath, dataOutputPath, dataSetDat
                 pass
 
         dataSetFileData['intensity']['airpls'] = baselinedData
-        dataFileNameAir = "%s_airPLS_smooth%d_maxit%d_porder%d_v%%d.csv" % (fileNameBase, settings['smooth'], settings['max_it'], settings['porder'])
-        dataPathAir = getVersionPath(dataOutputPath, dataFileNameAir, fileVersion)
-        baselinePath = getVersionPath(dataOutputPath, 'air_baseline_v%d.csv', fileVersion)
         airMatrix = zip(dataSetFileData['raman'],  baselinedData)
+        baselineMatrix = zip(dataSetFileData['raman'], airData)
+        puts('Writing Data')
         with indent(4, quote='>'):
-            printData(zip(dataSetFileData['raman'], airData), baselinePath, settings['prec'])
-            puts('Saved Baseline To: %s' % baselinePath)
-            printData(airMatrix, dataPathAir, settings['prec'])
-            puts('Saved Baseline Subtracted To: %s' % dataPathAir)
+            for format in settings['formats']:
+                puts("Data Format:" + format)
+                with indent(4, quote='>'):
+                    formatPath = os.path.join(dataOutputPath, format)
+                    try:
+                        os.mkdir(formatPath)
+                    except OSError as e:
+                        if e[0] == 17 or e[0] == 183:
+                            pass
+                        else:
+                            print e[0]
+                            raise
+                    dataFilteredFileName = "{base}_filtered_v%d.{ext}".format(base=fileNameBase, ext=format)
+                    dataFilteredPath = getVersionPath(formatPath, dataFilteredFileName, fileVersion)
+                    writeData(formatData(dataFiltered, format, settings['prec']), dataFilteredPath)
+                    puts('Saved Filtered To: %s' % dataFilteredPath)
+
+                    dataFileNameAir = "{base}_airPLS_v%d.{ext}".format(base=fileNameBase, ext=format)
+                    dataPathAir = getVersionPath(formatPath, dataFileNameAir, fileVersion)
+                    baselinePath = getVersionPath(formatPath, 'air_baseline_v%d.csv', fileVersion)
+
+                    writeData(formatData(baselineMatrix, format, settings['prec']), baselinePath)
+                    puts('Saved Baseline To: %s' % baselinePath)
+                    writeData(formatData(airMatrix, format, settings['prec']), dataPathAir)
+                    puts('Saved Baseline Subtracted To: %s' % dataPathAir)
     putSeparator('-', 30)
 
 
@@ -256,20 +287,30 @@ def processDataSet(dataSetName, dataSet, settings):
                 puts("Running Method B: Averaging All Data and Then Baselining")
                 dirAvg = numpy.array(dataSet['data']['dir']['intensity']['filtered']).mean(axis=1)
                 dirAvgBaseline, dirAvgSubtracted = baselineData(dirAvg, settings['smooth'], settings['porder'], settings['max_it'])
-                dirAvgFileName = "methodB_%s_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
-                dirAvgPath = getVersionPath(outputPath, dirAvgFileName, fileVersion)
-                printData(zip(dataSet['data']['dir']['raman'], dirAvgSubtracted), dirAvgPath, settings['prec'])
-                with indent(4, quote='>'):
-                    puts('Saved Method B to: %s' % dirAvgPath)
+                dirAvgMatrix = zip(dataSet['data']['dir']['raman'], dirAvgSubtracted)
+                puts('Writing DataSet Avg(Method B)')
+                for format in settings['formats']:
+                    puts("Data Format: " + format)
+                    with indent(4, quote='>'):
+                        formatPath = os.path.join(outputPath, format)
+                        dirAvgFileName = "methodB_{base}_v%d.{ext}".format(base=inputPathBasename, ext=format)
+                        dirAvgPath = getVersionPath(formatPath, dirAvgFileName, fileVersion)
+                        writeData(formatData(dirAvgMatrix, format, settings['prec']), dirAvgPath)
+                        puts('Saved Method B to: %s' % dirAvgPath)
             if 'a' in settings['method']:
                 puts('Running Method A: Averaging All Baselined Data and Then Baselining')
                 methodAAvg = numpy.array(dataSet['data']['dir']['intensity']['baselined']).mean(axis=1)
                 methodABaseline, methodASubtracted = baselineData(methodAAvg, settings['smooth'], settings['porder'], settings['max_it'])
-                methodAFileName = "methodA_%s_smooth%d_porder%d_maxit%d_v%%d.csv" % (inputPathBasename, settings['smooth'], settings['porder'], settings['max_it'])
-                methodAPath = getVersionPath(outputPath, methodAFileName, fileVersion)
-                printData(zip(dataSet['data']['dir']['raman'], methodASubtracted), methodAPath, settings['prec'])
-                with indent(4, quote='>'):
-                    puts('Saved Method A to: %s' % methodAPath)
+                methodAMatrix = zip(dataSet['data']['dir']['raman'], methodASubtracted)
+                puts('Writing DataSet Baselined(Method A)')
+                for format in settings['formats']:
+                    puts("Data Format: " + format)
+                    with indent(4, quote='>'):
+                        formatPath = os.path.join(outputPath, format)
+                        methodAFileName = "methodA_{base}_v%d.{ext}".format(base=inputPathBasename, ext=format)
+                        methodAPath = getVersionPath(formatPath, methodAFileName, fileVersion)
+                        writeData(formatData(methodAMatrix, format, settings['prec']))
+                        puts('Saved Method A to: %s' % methodAPath)
     putSeparator('-', 20)
 
 def processDataSets(settings, dataSets):
@@ -277,7 +318,7 @@ def processDataSets(settings, dataSets):
     for dataSetName, dataSet in dataSets.iteritems():
         processDataSet(dataSetName, dataSet, settings)
 
-def setSettings(method='b', xmin=0.0, xmax=4000.0, smooth=100, max_it=15, porder=1, prec=14):
+def setSettings(method='b', xmin=0.0, xmax=4000.0, smooth=100, max_it=15, porder=1, prec=14, formats=['csv']):
     if xmin > xmax:
         raise ValueError("Xmin(%f) Can Not Be Larger than Xmax(%f)" % (xmin, xmax))
     if 'a' not in method and 'b' not in method:
@@ -290,7 +331,8 @@ def setSettings(method='b', xmin=0.0, xmax=4000.0, smooth=100, max_it=15, porder
         'smooth': smooth,
         'max_it': max_it,
         'porder': porder,
-        'prec': prec
+        'prec': prec,
+        'formats': formats
     }
 
 def main(argv):

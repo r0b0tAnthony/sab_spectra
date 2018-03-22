@@ -36,3 +36,19 @@ class FloatValidator(object):
             return float(value)
         except (TypeError, ValueError):
             raise ValidationError(self.message)
+
+class CommaSeparatedValidator(object):
+    message = 'Enter valid options in a commad separated list. Valid options: {}'
+
+    def __init__(self, options=[], message=None):
+        if message is not None:
+            self.message = message
+        self.options = options
+
+    def __call__(self, value):
+        user_options = value.split(',')
+        valid_choices = set(user_options).intersection(self.options)
+        if len(valid_choices) < 1:
+            raise ValidationError(self.message.format(','.join(self.options)))
+        else:
+            return valid_choices
